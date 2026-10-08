@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #ebe9e2;
+  --color-surface: #f5f3ed;
+  --color-surface-raised: #fbfaf6;
+  --color-text: #17181c;
+  --color-text-muted: #6b6a66;
+  --color-border: #d9d6cc;
+  --color-primary: #17181c;
+  --color-primary-foreground: #f5f3ed;
+  --color-accent: #d6452b;
+  --color-success: #2f7d4f;
+  --color-warning: #b7791f;
+  --color-danger: #b42318;
+  --color-focus-ring: #3b6fd8;
+
+  --color-sidebar: #0d0e11;
+  --color-sidebar-raised: #1a1b20;
+  --color-sidebar-text: #e9e7e1;
+  --color-sidebar-muted: #8b8a86;
+  --color-sidebar-border: #26272c;
+
+  --color-night: #07080b;
+  --color-night-surface: #121318;
+  --color-night-border: #2b2c33;
+  --color-night-text: #ecebe6;
+  --color-night-muted: #9a9993;
+  --color-night-danger: #ff8f7e;
+}
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-newsreader);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
