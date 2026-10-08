@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Person;
+use App\Models\Strategy;
 use App\Models\Style;
 use App\Models\Tag;
 use App\Models\User;
@@ -166,5 +168,46 @@ class StyleApiTest extends TestCase
         Sanctum::actingAs(User::factory()->create());
 
         $this->getJson("/api/styles/{$style->slug}")->assertJsonCount(0, 'data.related');
+    }
+
+    public function test_style_detail_returns_limited_previews_with_total_counts(): void
+    {
+        $owner = User::factory()->create();
+        $style = Style::factory()->create();
+        foreach (range(1, 10) as $number) {
+            $style->references()->attach($owner->referenceItems()->create(['title' => "Ref {$number}", 'image_url' => 'https://example.com/a.jpg']));
+        }
+        foreach (Person::factory()->count(8)->create() as $person) {
+            $person->styles()->attach($style);
+        }
+        foreach (Strategy::factory()->count(7)->create() as $strategy) {
+            $strategy->styles()->attach($style);
+        }
+        Sanctum::actingAs($owner);
+
+        $this->getJson("/api/styles/{$style->slug}")
+            ->assertOk()
+            ->assertJsonCount(8, 'data.references')
+            ->assertJsonPath('data.references_count', 10)
+            ->assertJsonCount(6, 'data.people')
+            ->assertJsonPath('data.people_count', 8)
+            ->assertJsonCount(5, 'data.strategies')
+            ->assertJsonPath('data.strategies_count', 7);
+    }
+
+    public function test_people_and_strategies_can_be_filtered_by_style(): void
+    {
+        $style = Style::factory()->create();
+        $inside = Person::factory()->create();
+        $inside->styles()->attach($style);
+        Person::factory()->create();
+        $strategy = Strategy::factory()->create();
+        $strategy->styles()->attach($style);
+        Strategy::factory()->create();
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->getJson("/api/people?style={$style->slug}")->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.slug', $inside->slug);
+        $this->getJson("/api/strategies?style={$style->slug}")->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.slug', $strategy->slug);
+        $this->getJson('/api/people?style=nao-existe')->assertJsonPath('meta.total', 0);
     }
 }

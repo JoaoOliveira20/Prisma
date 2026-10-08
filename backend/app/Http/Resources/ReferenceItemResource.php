@@ -15,6 +15,7 @@ class ReferenceItemResource extends JsonResource
             'image_url' => $this->displayUrl(),
             'source_url' => $this->source_url,
             'credit' => $this->credit,
+            'created_at' => $this->created_at?->toIso8601String(),
             'description' => $this->description,
             'links' => $this->when(
                 $this->relationLoaded('styles'),
@@ -24,6 +25,11 @@ class ReferenceItemResource extends JsonResource
                     ->concat($this->strategies->map(fn ($item) => ['type' => 'strategy', 'slug' => $item->slug, 'name' => $item->name]))
                     ->values(),
             ),
+            'tags' => $this->when(
+                $this->relationLoaded('tags'),
+                fn () => $this->tags->map(fn ($tag) => ['name' => $tag->name, 'slug' => $tag->slug])->values(),
+            ),
+            'related' => ReferenceItemResource::collection($this->whenLoaded('related')),
             'is_favorite' => (bool) ($this->is_favorite ?? false),
             'group_ids' => $this->whenLoaded('groupItems', fn () => $this->groupItems->pluck('group_id')->values()),
             'can' => [

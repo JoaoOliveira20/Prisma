@@ -14,6 +14,12 @@ use Illuminate\Http\Request;
 
 class StyleController extends Controller
 {
+    private const PREVIEW_REFERENCES = 8;
+
+    private const PREVIEW_PEOPLE = 6;
+
+    private const PREVIEW_STRATEGIES = 5;
+
     public function index(Request $request)
     {
         $request->validate([
@@ -44,10 +50,11 @@ class StyleController extends Controller
 
         $style->load([
             'tags',
-            'references' => fn ($query) => $query->withUserState($user),
-            'people' => fn ($query) => $query->with('tags')->withFavoriteFlag($user),
-            'strategies' => fn ($query) => $query->with('tags')->withFavoriteFlag($user),
+            'references' => fn ($query) => $query->withUserState($user)->limit(self::PREVIEW_REFERENCES),
+            'people' => fn ($query) => $query->with('tags')->withFavoriteFlag($user)->orderBy('name')->limit(self::PREVIEW_PEOPLE),
+            'strategies' => fn ($query) => $query->with('tags')->withFavoriteFlag($user)->orderBy('name')->limit(self::PREVIEW_STRATEGIES),
         ])
+            ->loadCount(['references', 'people', 'strategies'])
             ->loadFavoriteFlag($request->user())
             ->loadGroupIds($request->user());
 

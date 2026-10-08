@@ -6,21 +6,22 @@ type ContentFiltersProps = {
   tags: Tag[];
   activeTag?: string;
   query?: string;
+  style?: string;
   sort?: string;
 };
 
-export function ContentFilters({ basePath, tags, activeTag, query, sort }: ContentFiltersProps) {
+export function ContentFilters({ basePath, tags, activeTag, query, style, sort }: ContentFiltersProps) {
   const hrefFor = (tag?: string) => {
     const params = new URLSearchParams();
     if (query) params.set("q", query);
     if (tag) params.set("tag", tag);
+    if (style) params.set("style", style);
     if (sort === "recent") params.set("sort", sort);
     const search = params.toString();
     return search ? `${basePath}?${search}` : basePath;
   };
 
-  const linkClass = (active: boolean) =>
-    `underline-offset-[7px] transition-colors ${active ? "text-text underline decoration-2" : "text-text-muted hover:text-text hover:underline hover:decoration-1"}`;
+  const linkClass = (active: boolean) => `nav-link ${active ? "text-text" : "text-text-muted hover:text-text"}`;
 
   return (
     <nav aria-label="Filtrar por tag">

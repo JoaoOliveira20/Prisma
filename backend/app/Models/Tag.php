@@ -28,8 +28,14 @@ class Tag extends Model
         return $this->belongsToMany(Strategy::class);
     }
 
+    public function referenceItems(): BelongsToMany
+    {
+        return $this->belongsToMany(ReferenceItem::class);
+    }
+
     public function isInUse(): bool
     {
-        return $this->styles()->exists() || $this->people()->exists() || $this->strategies()->exists();
+        return $this->referenceItems()->exists()
+            || $this->styles()->exists() || $this->people()->exists() || $this->strategies()->exists();
     }
 }

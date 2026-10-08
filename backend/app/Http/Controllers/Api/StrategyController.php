@@ -13,11 +13,14 @@ use Illuminate\Http\Request;
 
 class StrategyController extends Controller
 {
+    private const PREVIEW_REFERENCES = 8;
+
     public function index(Request $request)
     {
         $request->validate([
             'q' => ['nullable', 'string', 'max:120'],
             'tag' => ['nullable', 'string', 'max:120'],
+            'style' => ['nullable', 'string', 'max:255'],
             'sort' => ['nullable', 'in:name,recent'],
             'per_page' => ['nullable', 'integer', 'between:1,100'],
         ]);
@@ -27,6 +30,7 @@ class StrategyController extends Controller
             ->withFavoriteFlag($request->user())
             ->matching($request->q, ['name', 'summary', 'category'])
             ->when($request->tag, fn ($query, $tag) => $query->whereHas('tags', fn ($query) => $query->where('slug', $tag)))
+            ->when($request->style, fn ($query, $style) => $query->whereHas('styles', fn ($query) => $query->where('styles.slug', $style)))
             ->when(
                 $request->sort === 'recent',
                 fn ($query) => $query->latest('id'),
@@ -43,9 +47,10 @@ class StrategyController extends Controller
 
         $strategy->load([
             'tags',
-            'references' => fn ($query) => $query->withUserState($user),
+            'references' => fn ($query) => $query->withUserState($user)->limit(self::PREVIEW_REFERENCES),
             'styles' => fn ($query) => $query->with('tags')->withFavoriteFlag($user),
         ])
+            ->loadCount('references')
             ->loadFavoriteFlag($request->user())
             ->loadGroupIds($request->user());
 

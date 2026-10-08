@@ -26,18 +26,19 @@ export default async function StyleDetailPage({ params }: PageProps<"/estilos/[s
   const people = style.people ?? [];
   const strategies = style.strategies ?? [];
   const related = (style.related ?? []).slice(0, 3);
+  const referencesTotal = style.references_count ?? references.length;
+  const peopleTotal = style.people_count ?? people.length;
+  const strategiesTotal = style.strategies_count ?? strategies.length;
   const facts = [
     ...(style.period ? [{ label: "Período", value: style.period }] : []),
     ...(style.origin ? [{ label: "Origem", value: style.origin }] : []),
   ];
 
   const sections = [
-    { id: "historia", label: "História" },
-    { id: "caracteristicas", label: "Características", count: style.characteristics.length },
-    { id: "influencias", label: "Influências" },
-    { id: "pessoas", label: "Pessoas", count: people.length },
-    { id: "estrategias", label: "Estratégias", count: strategies.length },
-    { id: "referencias", label: "Referências", count: references.length },
+    { id: "sobre", label: "Sobre" },
+    { id: "pessoas", label: "Pessoas", count: peopleTotal },
+    { id: "estrategias", label: "Estratégias", count: strategiesTotal },
+    { id: "referencias", label: "Referências", count: referencesTotal, ...(referencesTotal > 0 ? { href: `/estilos/${style.slug}/referencias` } : {}) },
     ...(related.length > 0 ? [{ id: "relacionados", label: "Estilos relacionados", count: related.length }] : []),
   ];
 
@@ -68,27 +69,49 @@ export default async function StyleDetailPage({ params }: PageProps<"/estilos/[s
       />
       <SectionNav sections={sections} />
 
-      <DimensionSection id="historia" eyebrow="Dimensão" title="História">
-        {style.history ? <Paragraphs text={style.history} /> : <EmptySection message="A história deste estilo ainda não foi escrita." />}
+      <DimensionSection id="sobre" eyebrow="Dimensão" title="Sobre o estilo">
+        <div className="grid gap-12 xl:grid-cols-12">
+          <div className="xl:col-span-7">
+            <h3 className="eyebrow mb-5">História</h3>
+            {style.history ? <Paragraphs text={style.history} /> : <EmptySection message="A história deste estilo ainda não foi escrita." />}
+          </div>
+          <div className="space-y-12 xl:col-span-5">
+            <div>
+              <h3 className="eyebrow mb-5">Características</h3>
+              {style.characteristics.length > 0 ? <NumberedList items={style.characteristics} /> : <EmptySection message="Nenhuma característica registrada." />}
+            </div>
+            <div>
+              <h3 className="eyebrow mb-5">Influências</h3>
+              {style.influences ? <p className="font-serif text-2xl leading-snug">{style.influences}</p> : <EmptySection message="Nenhuma influência registrada." />}
+            </div>
+          </div>
+        </div>
       </DimensionSection>
-      <DimensionSection id="caracteristicas" eyebrow="Dimensão" title="Características" count={style.characteristics.length}>
-        {style.characteristics.length > 0 ? <NumberedList items={style.characteristics} /> : <EmptySection message="Nenhuma característica registrada." />}
-      </DimensionSection>
-      <DimensionSection id="influencias" eyebrow="Dimensão" title="Influências">
-        {style.influences ? <p className="max-w-2xl font-serif text-2xl leading-snug">{style.influences}</p> : <EmptySection message="Nenhuma influência registrada." />}
-      </DimensionSection>
-      <DimensionSection id="pessoas" eyebrow="Conexão" title="Pessoas" count={people.length}>
+      <DimensionSection
+        id="pessoas"
+        eyebrow="Conexão"
+        title="Pessoas"
+        count={peopleTotal}
+        seeAll={peopleTotal > people.length ? { href: `/pessoas?style=${style.slug}`, label: `Ver as ${peopleTotal} pessoas` } : undefined}
+      >
         <ContentGrid items={people.map(personToCard)} layout="portraits-compact" emptyMessage="Nenhuma pessoa relacionada a este estilo." />
       </DimensionSection>
-      <DimensionSection id="estrategias" eyebrow="Conexão" title="Estratégias" count={strategies.length}>
+      <DimensionSection
+        id="estrategias"
+        eyebrow="Conexão"
+        title="Estratégias"
+        count={strategiesTotal}
+        seeAll={strategiesTotal > strategies.length ? { href: `/estrategias?style=${style.slug}`, label: `Ver as ${strategiesTotal} estratégias` } : undefined}
+      >
         {strategies.length > 0 ? <StrategyList items={strategies.map(strategyToCard)} emptyMessage="" /> : <EmptySection message="Nenhuma estratégia relacionada a este estilo." />}
       </DimensionSection>
       <DimensionSection
         id="referencias"
         eyebrow="Imagens"
         title="Referências"
-        count={references.length}
+        count={referencesTotal}
         action={style.can.update && <AddReferenceButton type="style" slug={style.slug} />}
+        seeAll={referencesTotal > 0 ? { href: `/estilos/${style.slug}/referencias`, label: `Ver todas as ${referencesTotal} referências` } : undefined}
       >
         <ReferenceGallery items={references.map(referenceToGalleryItem)} groups={groups} emptyMessage="Nenhuma referência adicionada ainda." />
       </DimensionSection>

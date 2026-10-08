@@ -17,7 +17,7 @@ class TagController extends Controller
 
         return TagResource::collection(
             Tag::query()
-                ->withCount(['styles', 'people', 'strategies'])
+                ->withCount(['styles', 'people', 'strategies', 'referenceItems'])
                 ->matching($request->q, ['name'])
                 ->orderBy('name')
                 ->get()
@@ -30,7 +30,7 @@ class TagController extends Controller
         $tag->user_id = $request->user()->id;
         $tag->save();
 
-        return (new TagResource($tag->loadCount(['styles', 'people', 'strategies'])))->response()->setStatusCode(201);
+        return (new TagResource($tag->loadCount(['styles', 'people', 'strategies', 'referenceItems'])))->response()->setStatusCode(201);
     }
 
     public function update(SaveTagRequest $request, Tag $tag): TagResource
@@ -39,7 +39,7 @@ class TagController extends Controller
 
         $tag->update($request->validated());
 
-        return new TagResource($tag->loadCount(['styles', 'people', 'strategies']));
+        return new TagResource($tag->loadCount(['styles', 'people', 'strategies', 'referenceItems']));
     }
 
     public function destroy(Tag $tag): JsonResponse

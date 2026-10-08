@@ -4,17 +4,23 @@ type ListSearchProps = {
   basePath: string;
   query?: string;
   tag?: string;
+  style?: string;
   sort?: string;
   placeholder: string;
   withSort?: boolean;
 };
 
-export function ListSearch({ basePath, query, tag, sort, placeholder, withSort = true }: ListSearchProps) {
+export function ListSearch({ basePath, query, tag, style, sort, placeholder, withSort = true }: ListSearchProps) {
+  const clearParams = new URLSearchParams();
+  if (tag) clearParams.set("tag", tag);
+  if (style) clearParams.set("style", style);
+  const clearHref = clearParams.size > 0 ? `${basePath}?${clearParams}` : basePath;
   const showClear = Boolean(query || (withSort && sort === "recent"));
 
   return (
     <form action={basePath} role="search" className="flex flex-wrap items-center gap-x-6 gap-y-3">
       {tag && <input type="hidden" name="tag" value={tag} />}
+      {style && <input type="hidden" name="style" value={style} />}
       <div className="relative min-w-60 flex-1 sm:max-w-lg">
         <span className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 text-text-muted"><NavIcon name="search" /></span>
         <label className="sr-only" htmlFor="list-search">Buscar</label>
@@ -38,7 +44,7 @@ export function ListSearch({ basePath, query, tag, sort, placeholder, withSort =
       )}
       <button type="submit" className="h-11 text-sm font-medium underline-offset-4 hover:underline">Buscar</button>
       {showClear && (
-        <a href={tag ? `${basePath}?tag=${tag}` : basePath} className="text-sm text-text-muted underline-offset-4 hover:text-text hover:underline">Limpar</a>
+        <a href={clearHref} className="text-sm text-text-muted underline-offset-4 hover:text-text hover:underline">Limpar</a>
       )}
     </form>
   );

@@ -14,6 +14,15 @@ export type ContentCardData = {
 
 const joinMeta = (...parts: (string | null)[]) => parts.filter(Boolean).join(" · ");
 
+export const contentTypeLabels: Record<ContentType, string> = {
+  style: "Estilo",
+  person: "Pessoa",
+  strategy: "Estratégia",
+};
+
+export const formatDate = (value: string) =>
+  new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short", year: "numeric" }).format(new Date(value));
+
 export const contentPaths: Record<ContentType, string> = {
   style: "/estilos",
   person: "/pessoas",
@@ -78,9 +87,11 @@ export function referenceToGalleryItem(reference: ReferenceItem): GalleryItem {
     title: reference.title,
     description: reference.description,
     image_url: reference.image_url,
+    created_at: reference.created_at,
     credit: reference.credit,
     source_url: reference.source_url,
     links: reference.links,
+    tags: reference.tags,
     is_favorite: reference.is_favorite,
     group_ids: reference.group_ids,
     can: reference.can,

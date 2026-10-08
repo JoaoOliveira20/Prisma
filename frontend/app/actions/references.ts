@@ -32,6 +32,7 @@ export async function createReference(_state: FormState, formData: FormData) {
     body.set(`links[${index}][type]`, type);
     body.set(`links[${index}][slug]`, slug);
   });
+  formData.getAll("tags").forEach((tag, index) => body.set(`tags[${index}]`, String(tag)));
 
   try {
     await apiRequest("/references", { method: "POST", body });
@@ -56,6 +57,7 @@ export async function updateReference(referenceId: number, _state: FormState, fo
         description: optionalText(formData.get("description")),
         source_url: optionalText(formData.get("source_url")),
         links: linksOf(formData),
+        tags: formData.getAll("tags").map(String),
       }),
     });
   } catch (error) {
@@ -71,10 +73,11 @@ export async function updateReference(referenceId: number, _state: FormState, fo
 
 export async function linkReferences(type: ContentType, slug: string, referenceIds: number[]) {
   try {
-    for (const id of referenceIds) {
-      await apiRequest(`/references/${id}/links`, { method: "POST", body: JSON.stringify({ type, slug }) });
-    }
+    await apiRequest("/references/links", { method: "POST", body: JSON.stringify({ references: referenceIds, type, slug }) });
   } catch (error) {
+    if (error instanceof ApiError && error.status === 403) {
+      return { message: "Você só pode vincular suas referências a conteúdos que criou." };
+    }
     return errorState(error);
   }
 

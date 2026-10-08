@@ -22,11 +22,12 @@ export default async function StrategyDetailPage({ params }: PageProps<"/estrate
   const [strategy, groups] = await Promise.all([getStrategy(slug), getGroups()]);
   const styles = strategy.styles ?? [];
   const references = strategy.references ?? [];
+  const referencesTotal = strategy.references_count ?? references.length;
 
   const sections = [
     { id: "descricao", label: "Descrição" },
     { id: "estilos", label: "Aplica-se a", count: styles.length },
-    { id: "referencias", label: "Referências", count: references.length },
+    { id: "referencias", label: "Referências", count: referencesTotal, ...(referencesTotal > 0 ? { href: `/estrategias/${strategy.slug}/referencias` } : {}) },
   ];
 
   return (
@@ -65,8 +66,9 @@ export default async function StrategyDetailPage({ params }: PageProps<"/estrate
         id="referencias"
         eyebrow="Imagens"
         title="Referências"
-        count={references.length}
+        count={referencesTotal}
         action={strategy.can.update && <AddReferenceButton type="strategy" slug={strategy.slug} />}
+        seeAll={referencesTotal > 0 ? { href: `/estrategias/${strategy.slug}/referencias`, label: `Ver todas as ${referencesTotal} referências` } : undefined}
       >
         <ReferenceGallery items={references.map(referenceToGalleryItem)} groups={groups} emptyMessage="Nenhuma referência adicionada ainda." />
       </DimensionSection>

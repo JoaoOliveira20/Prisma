@@ -14,6 +14,8 @@ class UpdateReferenceItemRequest extends FormRequest
             'source_url' => ['nullable', 'url:http,https', 'max:2048'],
             'credit' => ['nullable', 'string', 'max:160'],
             'description' => ['nullable', 'string', 'max:1000'],
+            'tags' => ['nullable', 'array', 'max:20'],
+            'tags.*' => ['string', 'exists:tags,slug'],
             'links' => ['nullable', 'array', 'max:20'],
             'links.*.type' => ['required', Rule::in(['style', 'person', 'strategy'])],
             'links.*.slug' => ['required', 'string', 'max:255'],

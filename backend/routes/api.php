@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\GroupItemController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\PersonController;
+use App\Http\Controllers\Api\ReferenceBulkLinkController;
 use App\Http\Controllers\Api\ReferenceItemController;
 use App\Http\Controllers\Api\ReferenceLinkController;
 use App\Http\Controllers\Api\StrategyController;
@@ -32,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('images', [ImageController::class, 'index']);
     Route::apiResource('references', ReferenceItemController::class)->only(['index', 'show', 'store', 'update', 'destroy'])->parameters(['references' => 'referenceItem']);
 
+    Route::post('references/links', [ReferenceBulkLinkController::class, 'store']);
     Route::post('references/{referenceItem}/links', [ReferenceLinkController::class, 'store']);
     Route::delete('references/{referenceItem}/links/{type}/{slug}', [ReferenceLinkController::class, 'destroy']);
 

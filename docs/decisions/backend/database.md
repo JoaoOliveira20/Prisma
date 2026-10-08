@@ -14,6 +14,7 @@
 | `tags` | `user_id` (nulo = tag do sistema), `name`, `slug` (únicos) |
 | `style_tag`, `person_tag`, `strategy_tag` | Tags de cada tipo (pivôs com chave composta) |
 | `person_style`, `strategy_style` | Pessoas e estratégias ↔ estilos |
+| `reference_item_tag` | Tags próprias das imagens ([ADR-015](../adr/ADR-015-reference-tags-and-explicit-links.md)); migration aditiva |
 | `referenceables` | Referência ↔ estilo/pessoa/estratégia (polimórfica) |
 | `groups`, `group_items` | Grupos por usuário; itens polimórficos |
 | `jobs`, `sessions`* (e `cache`, sem uso) | Padrão do Laravel; sessão e filas com driver `database`. O **cache usa arquivo** (`CACHE_STORE=file`) |

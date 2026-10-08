@@ -8,11 +8,16 @@ use App\Http\Requests\UpdateReferenceItemRequest;
 use App\Http\Resources\ReferenceItemResource;
 use App\Models\GroupItem;
 use App\Models\ReferenceItem;
+use App\Models\Tag;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ReferenceItemController extends Controller
 {
+    private const RELATED_LIMIT = 8;
+
     public function index(Request $request)
     {
         $request->validate([
@@ -48,6 +53,7 @@ class ReferenceItemController extends Controller
         ]);
 
         $entities->each(fn ($entity) => $entity->references()->attach($reference));
+        $this->syncTags($reference, $request);
 
         return (new ReferenceItemResource($reference->loadUserState($request->user())))
             ->response()
@@ -56,7 +62,11 @@ class ReferenceItemController extends Controller
 
     public function show(Request $request, ReferenceItem $referenceItem): ReferenceItemResource
     {
-        return new ReferenceItemResource($referenceItem->loadUserState($request->user()));
+        $user = $request->user();
+        $referenceItem->loadUserState($user);
+        $referenceItem->setRelation('related', $this->relatedReferences($referenceItem, $user));
+
+        return new ReferenceItemResource($referenceItem);
     }
 
     public function update(UpdateReferenceItemRequest $request, ReferenceItem $referenceItem): ReferenceItemResource
@@ -67,7 +77,8 @@ class ReferenceItemController extends Controller
             ->map(fn (array $link) => GroupItem::resolveGroupable($link['type'], $link['slug']))
             ->each(fn ($entity) => $this->authorize('update', $entity));
 
-        $referenceItem->update($request->safe()->except('links'));
+        $referenceItem->update($request->safe()->except(['links', 'tags']));
+        $this->syncTags($referenceItem, $request);
 
         if ($request->has('links')) {
             foreach (['styles' => 'style', 'people' => 'person', 'strategies' => 'strategy'] as $relation => $type) {
@@ -87,5 +98,43 @@ class ReferenceItemController extends Controller
         $referenceItem->delete();
 
         return response()->json(status: 204);
+    }
+
+    private function syncTags(ReferenceItem $reference, Request $request): void
+    {
+        if ($request->has('tags')) {
+            $reference->tags()->sync(Tag::whereIn('slug', $request->validated('tags') ?? [])->pluck('id'));
+        }
+    }
+
+    private function relatedReferences(ReferenceItem $reference, User $user): Collection
+    {
+        $shared = [
+            'styles' => $reference->styles->modelKeys(),
+            'people' => $reference->people->modelKeys(),
+            'strategies' => $reference->strategies->modelKeys(),
+            'tags' => $reference->tags->modelKeys(),
+        ];
+
+        if (collect($shared)->flatten()->isEmpty()) {
+            return new Collection;
+        }
+
+        return ReferenceItem::query()
+            ->whereKeyNot($reference->id)
+            ->where(function ($query) use ($shared) {
+                foreach ($shared as $relation => $ids) {
+                    $query->orWhereHas($relation, fn ($query) => $query->whereIn("{$query->getModel()->getTable()}.id", $ids));
+                }
+            })
+            ->withUserState($user)
+            ->latest('id')
+            ->limit(60)
+            ->get()
+            ->sortByDesc(fn (ReferenceItem $candidate) => collect($shared)->sum(
+                fn ($ids, $relation) => $candidate->$relation->pluck('id')->intersect($ids)->count()
+            ))
+            ->take(self::RELATED_LIMIT)
+            ->values();
     }
 }

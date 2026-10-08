@@ -22,9 +22,12 @@ class StyleResource extends JsonResource
             'has_uploaded_image' => $this->image_path !== null,
             'tags' => TagResource::collection($this->whenLoaded('tags')),
             'references' => ReferenceItemResource::collection($this->whenLoaded('references')),
+            'references_count' => $this->whenCounted('references'),
             'related' => StyleResource::collection($this->whenLoaded('related')),
             'people' => PersonResource::collection($this->whenLoaded('people')),
+            'people_count' => $this->whenCounted('people'),
             'strategies' => StrategyResource::collection($this->whenLoaded('strategies')),
+            'strategies_count' => $this->whenCounted('strategies'),
             'is_favorite' => (bool) ($this->is_favorite ?? false),
             'group_ids' => $this->when($this->group_ids !== null, fn () => $this->group_ids),
             'can' => [

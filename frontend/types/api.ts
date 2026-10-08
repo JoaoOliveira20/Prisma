@@ -12,7 +12,10 @@ export type ReferenceItem = {
   source_url: string | null;
   credit: string | null;
   description: string | null;
+  created_at?: string | null;
+  related?: ReferenceItem[];
   links?: { type: ContentType; slug: string; name: string }[];
+  tags?: Pick<Tag, "name" | "slug">[];
   is_favorite: boolean;
   group_ids?: number[];
   can: { update: boolean; delete: boolean };
@@ -30,9 +33,12 @@ export type Style = {
   cover_url: string | null;
   tags?: Tag[];
   references?: ReferenceItem[];
+  references_count?: number;
   related?: Style[];
   people?: Person[];
+  people_count?: number;
   strategies?: Strategy[];
+  strategies_count?: number;
   has_uploaded_image: boolean;
   is_favorite: boolean;
   group_ids?: number[];
@@ -58,6 +64,7 @@ export type Person = {
   tags?: Tag[];
   styles?: Style[];
   references?: ReferenceItem[];
+  references_count?: number;
   has_uploaded_image: boolean;
   is_favorite: boolean;
   group_ids?: number[];
@@ -74,6 +81,7 @@ export type Strategy = {
   tags?: Tag[];
   styles?: Style[];
   references?: ReferenceItem[];
+  references_count?: number;
   has_uploaded_image: boolean;
   is_favorite: boolean;
   group_ids?: number[];
@@ -121,12 +129,16 @@ export type GalleryItem = {
   title: string;
   description: string | null;
   image_url: string;
+  created_at?: string | null;
   credit?: string | null;
   source_url?: string | null;
   links?: ReferenceItem["links"];
+  tags?: ReferenceItem["tags"];
   is_favorite?: boolean;
   group_ids?: number[];
   can: { update: boolean; delete: boolean };
 };
 
 export type LinkOption = { value: string; label: string };
+
+export type EntityOption = LinkOption & { type: ContentType };

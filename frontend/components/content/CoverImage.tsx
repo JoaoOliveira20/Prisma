@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { FadeImage } from "./FadeImage";
 
 type CoverImageProps = {
   name: string;
@@ -11,7 +11,7 @@ export function CoverImage({ name, coverUrl, className = "", sizes = "320px" }: 
   return (
     <div className={`@container relative overflow-hidden bg-surface ${className}`}>
       {coverUrl ? (
-        <Image src={coverUrl} alt={name} fill unoptimized sizes={sizes} className="object-cover" />
+        <FadeImage src={coverUrl} alt={name} fill unoptimized sizes={sizes} className="object-cover" />
       ) : (
         <span aria-hidden="true" className="absolute inset-0 grid select-none place-items-center font-serif leading-none text-text/20" style={{ fontSize: "46cqw" }}>
           {name.charAt(0)}

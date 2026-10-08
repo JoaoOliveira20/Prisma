@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Facades\Storage;
 
@@ -29,20 +30,25 @@ class ReferenceItem extends Model
     public function scopeWithUserState(Builder $query, User $user): void
     {
         $query
-            ->with(['styles', 'people', 'strategies', 'groupItems' => static::userGroupItems($user)])
+            ->with(['styles', 'people', 'strategies', 'tags', 'groupItems' => static::userGroupItems($user)])
             ->withFavoriteFlag($user);
     }
 
     public function loadUserState(User $user): static
     {
         return $this
-            ->load(['styles', 'people', 'strategies', 'groupItems' => static::userGroupItems($user)])
+            ->load(['styles', 'people', 'strategies', 'tags', 'groupItems' => static::userGroupItems($user)])
             ->loadFavoriteFlag($user);
     }
 
     private static function userGroupItems(User $user): Closure
     {
         return fn ($items) => $items->whereHas('group', fn ($group) => $group->where('user_id', $user->id));
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class)->orderBy('tags.name');
     }
 
     public function owner(): BelongsTo

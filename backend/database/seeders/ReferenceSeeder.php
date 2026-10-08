@@ -37,6 +37,7 @@ class ReferenceSeeder extends Seeder
             ]);
             $reference->forceFill(['image_path' => $path])->save();
             $style->references()->attach($reference);
+            $reference->tags()->sync($style->tags()->pluck('tags.id'));
         }
     }
 }

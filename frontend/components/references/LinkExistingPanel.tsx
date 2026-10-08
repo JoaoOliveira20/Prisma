@@ -17,16 +17,24 @@ export function LinkExistingPanel({ type, slug, onDone }: LinkExistingPanelProps
   const [failed, setFailed] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
   const [message, setMessage] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
-    fetch("/api/my-references")
-      .then((response) => (response.ok ? response.json() : Promise.reject()))
-      .then(({ references }: { references: GalleryItem[] }) =>
-        setItems(references.filter((reference) => !reference.links?.some((link) => link.type === type && link.slug === slug))),
-      )
-      .catch(() => setFailed(true));
-  }, [type, slug]);
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      fetch(`/api/my-references?q=${encodeURIComponent(query)}`, { signal: controller.signal })
+        .then((response) => (response.ok ? response.json() : Promise.reject()))
+        .then(({ references }: { references: GalleryItem[] }) =>
+          setItems(references.filter((reference) => !reference.links?.some((link) => link.type === type && link.slug === slug))),
+        )
+        .catch((error) => error?.name !== "AbortError" && setFailed(true));
+    }, 180);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [type, slug, query]);
 
   const toggle = (id: number) => setSelected((current) => (current.includes(id) ? current.filter((value) => value !== id) : [...current, id]));
 
@@ -39,13 +47,22 @@ export function LinkExistingPanel({ type, slug, onDone }: LinkExistingPanelProps
 
   if (failed) return <p role="alert" className="text-sm text-danger">Não foi possível carregar suas referências.</p>;
   if (!items) return <p className="text-sm text-text-muted">Carregando suas referências…</p>;
-  if (items.length === 0) {
-    return <p className="rounded-sm border border-dashed border-border px-4 py-8 text-center text-sm text-text-muted">Você não tem outras referências para vincular a este conteúdo.</p>;
-  }
-
   return (
     <div className="space-y-4">
       <p className="text-sm text-text-muted">Escolha as referências suas que também inspiram ou ilustram este conteúdo.</p>
+      <input
+        type="search"
+        aria-label="Buscar suas referências"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="Buscar por título ou crédito"
+        className="h-10 w-full rounded-sm border border-border-strong bg-transparent px-3 text-sm placeholder:text-text-muted focus:border-text"
+      />
+      {items.length === 0 && (
+        <p className="rounded-sm border border-dashed border-border px-4 py-8 text-center text-sm text-text-muted">
+          {query ? "Nenhuma referência sua encontrada." : "Você não tem outras referências para vincular a este conteúdo."}
+        </p>
+      )}
       <ul className="grid max-h-80 grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3">
         {items.map((item) => (
           <li key={item.key}>

@@ -16,9 +16,9 @@ export function ImageTile({ item, aspect = "aspect-[4/3]", eyebrow, sizes = "(mi
   const Heading = `h${headingLevel}` as const;
 
   return (
-    <figure className="group relative">
+    <figure className="group reveal relative">
       <Link href={item.href} className="block">
-        <CoverImage name={item.name} coverUrl={item.imageUrl} sizes={sizes} className={`${aspect} w-full [&_img]:transition-transform [&_img]:duration-700 group-hover:[&_img]:scale-[1.03]`} />
+        <CoverImage name={item.name} coverUrl={item.imageUrl} sizes={sizes} className={`${aspect} w-full [&_img]:transition-[transform,opacity] [&_img]:duration-700 group-hover:[&_img]:scale-[1.03]`} />
         <figcaption className="mt-4 space-y-1.5">
           {label && <p className="eyebrow">{label}</p>}
           <Heading className="font-serif text-2xl leading-tight">{item.name}</Heading>

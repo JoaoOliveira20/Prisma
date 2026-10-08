@@ -7,10 +7,9 @@ import { ChipCheckboxes } from "@/components/ui/ChipCheckboxes";
 import { Form } from "@/components/ui/Form";
 import { Modal } from "@/components/ui/Modal";
 import { TextAreaField, TextField } from "@/components/ui/TextField";
-import type { GalleryItem, LinkOption } from "@/types/api";
+import { EntityPicker } from "@/components/ui/EntityPicker";
+import type { EntityOption, GalleryItem, LinkOption } from "@/types/api";
 import { LinkExistingPanel } from "./LinkExistingPanel";
-
-type LinkOptions = { styles: LinkOption[]; people: LinkOption[]; strategies: LinkOption[] };
 
 type ReferenceModalProps = {
   open: boolean;
@@ -21,22 +20,23 @@ type ReferenceModalProps = {
 
 function ReferenceForm({ item, fixedLink, onDone }: { item?: GalleryItem; fixedLink?: string; onDone: () => void }) {
   const [state, action, pending] = useActionState(item?.id ? updateReference.bind(null, item.id) : createReference, null);
-  const [options, setOptions] = useState<LinkOptions | null>(null);
-  const [optionsFailed, setOptionsFailed] = useState(false);
+  const [tagOptions, setTagOptions] = useState<LinkOption[] | null>(null);
+  const [tagsFailed, setTagsFailed] = useState(false);
+  const [links, setLinks] = useState<EntityOption[]>(
+    () => item?.links?.map((link) => ({ value: `${link.type}:${link.slug}`, label: link.name, type: link.type })) ?? [],
+  );
   const error = (name: string) => state?.errors?.[name]?.[0];
-  const selected = item?.links?.map((link) => `${link.type}:${link.slug}`) ?? [];
 
   useEffect(() => {
     if (state?.success) onDone();
   }, [state, onDone]);
 
   useEffect(() => {
-    if (fixedLink) return;
-    fetch("/api/link-options")
+    fetch("/api/tag-options")
       .then((response) => (response.ok ? response.json() : Promise.reject()))
-      .then(setOptions)
-      .catch(() => setOptionsFailed(true));
-  }, [fixedLink]);
+      .then(({ tags }: { tags: LinkOption[] }) => setTagOptions(tags))
+      .catch(() => setTagsFailed(true));
+  }, []);
 
   return (
     <Form action={action} className="grid gap-4 sm:grid-cols-2">
@@ -61,18 +61,23 @@ function ReferenceForm({ item, fixedLink, onDone }: { item?: GalleryItem; fixedL
 
       {fixedLink && <input type="hidden" name="links" value={fixedLink} />}
       {!fixedLink && (
-        <div className="space-y-4 sm:col-span-2">
-          {!options && !optionsFailed && <p className="text-xs text-text-muted">Carregando opções de vínculo…</p>}
-          {optionsFailed && <p className="text-xs text-danger" role="alert">Não foi possível carregar os conteúdos para vincular.</p>}
-          {options && (
-            <>
-              <ChipCheckboxes legend="Vincular a estilos" name="links" options={options.styles} selected={selected} emptyMessage="Você ainda não criou estilos." />
-              <ChipCheckboxes legend="Vincular a pessoas" name="links" options={options.people} selected={selected} emptyMessage="Você ainda não criou pessoas." />
-              <ChipCheckboxes legend="Vincular a estratégias" name="links" options={options.strategies} selected={selected} emptyMessage="Você ainda não criou estratégias." />
-            </>
-          )}
+        <div className="sm:col-span-2">
+          <EntityPicker legend="Vincular a" name="links" selected={links} onChange={setLinks} />
         </div>
       )}
+      <div className="sm:col-span-2">
+        {!tagOptions && !tagsFailed && <p className="text-xs text-text-muted">Carregando tags…</p>}
+        {tagsFailed && <p className="text-xs text-danger" role="alert">Não foi possível carregar as tags.</p>}
+        {tagOptions && (
+          <ChipCheckboxes
+            legend="Tags da imagem"
+            name="tags"
+            options={tagOptions}
+            selected={item?.tags?.map((tag) => tag.slug) ?? []}
+            emptyMessage="Ainda não há tags. Crie tags na página Tags."
+          />
+        )}
+      </div>
 
       {state?.message && !state.success && Object.keys(state.errors ?? {}).length === 0 && (
         <p role="alert" className="text-sm text-danger sm:col-span-2">{state.message}</p>

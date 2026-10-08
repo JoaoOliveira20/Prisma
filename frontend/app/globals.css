@@ -35,6 +35,10 @@
   --font-serif: var(--font-newsreader);
 }
 
+html {
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 body {
   background: var(--color-background);
   color: var(--color-text);
@@ -119,7 +123,151 @@ body {
 }
 
 .rise-in {
-  animation: rise-in 600ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: rise-in 600ms var(--ease-out) both;
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.page-in {
+  animation: page-in 380ms var(--ease-out) backwards;
+}
+
+.results-in {
+  animation: page-in 320ms var(--ease-out) backwards;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0px entry 14rem;
+  }
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+}
+
+.menu-in {
+  transform-origin: top right;
+  animation: menu-in 140ms var(--ease-out);
+}
+
+@keyframes result-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.result-in {
+  animation: result-in 180ms var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 22ms);
+}
+
+@keyframes heart-pop {
+  40% {
+    transform: scale(1.35);
+  }
+}
+
+.heart-pop {
+  animation: heart-pop 340ms var(--ease-out);
+}
+
+@keyframes image-in {
+  from {
+    opacity: 0;
+    transform: scale(1.015);
+  }
+}
+
+.image-in {
+  animation: image-in 420ms var(--ease-out) backwards;
+}
+
+dialog:not(.command-palette) {
+  opacity: 0;
+  transform: translateY(10px) scale(0.985);
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out),
+    overlay 200ms allow-discrete,
+    display 200ms allow-discrete;
+}
+
+dialog:not(.command-palette)[open] {
+  opacity: 1;
+  transform: none;
+}
+
+dialog:not(.command-palette)::backdrop {
+  opacity: 0;
+  transition:
+    opacity 200ms var(--ease-out),
+    overlay 200ms allow-discrete,
+    display 200ms allow-discrete;
+}
+
+dialog:not(.command-palette)[open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  dialog:not(.command-palette)[open] {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+
+  dialog:not(.command-palette)[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+.nav-link {
+  background: linear-gradient(currentColor, currentColor) left bottom / 0 1px no-repeat;
+  padding-bottom: 6px;
+  transition:
+    color 200ms ease,
+    background-size 320ms var(--ease-out);
+}
+
+.nav-link:hover {
+  background-size: 100% 1px;
+}
+
+.nav-link[aria-current] {
+  background-size: 100% 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .page-in,
+  .results-in,
+  .result-in,
+  .image-in {
+    animation: none;
+  }
+
+  dialog:not(.command-palette),
+  dialog:not(.command-palette)::backdrop {
+    transition: none;
+  }
 }
 
 @media (min-width: 64rem) {

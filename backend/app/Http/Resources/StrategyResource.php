@@ -20,6 +20,7 @@ class StrategyResource extends JsonResource
             'tags' => TagResource::collection($this->whenLoaded('tags')),
             'styles' => StyleResource::collection($this->whenLoaded('styles')),
             'references' => ReferenceItemResource::collection($this->whenLoaded('references')),
+            'references_count' => $this->whenCounted('references'),
             'is_favorite' => (bool) ($this->is_favorite ?? false),
             'group_ids' => $this->when($this->group_ids !== null, fn () => $this->group_ids),
             'can' => [

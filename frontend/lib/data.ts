@@ -5,6 +5,7 @@ import { ApiError, apiRequest, apiRequestOrLogin } from "./api";
 type ListFilters = {
   q?: string;
   tag?: string;
+  style?: string;
   sort?: "name" | "recent";
   page?: number;
   perPage?: number;
@@ -31,6 +32,7 @@ async function getPage<T>(path: string, filters: ListFilters) {
   const params = new URLSearchParams();
   if (filters.q) params.set("q", filters.q);
   if (filters.tag) params.set("tag", filters.tag);
+  if (filters.style) params.set("style", filters.style);
   if (filters.sort) params.set("sort", filters.sort);
   if (filters.page) params.set("page", String(filters.page));
   if (filters.perPage) params.set("per_page", String(filters.perPage));
@@ -67,6 +69,11 @@ type ImageFilters = {
   q?: string;
   kind?: string;
   style?: string;
+  tag?: string;
+  group?: number;
+  sort?: string;
+  person?: string;
+  strategy?: string;
   mine?: boolean;
   page?: number;
   perPage?: number;
@@ -77,6 +84,11 @@ export async function getImagesPage(filters: ImageFilters = {}) {
   if (filters.q) params.set("q", filters.q);
   if (filters.kind) params.set("kind", filters.kind);
   if (filters.style) params.set("style", filters.style);
+  if (filters.tag) params.set("tag", filters.tag);
+  if (filters.group) params.set("group", String(filters.group));
+  if (filters.sort) params.set("sort", filters.sort);
+  if (filters.person) params.set("person", filters.person);
+  if (filters.strategy) params.set("strategy", filters.strategy);
   if (filters.mine) params.set("mine", "1");
   if (filters.page) params.set("page", String(filters.page));
   if (filters.perPage) params.set("per_page", String(filters.perPage));

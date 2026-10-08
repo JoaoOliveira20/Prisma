@@ -14,7 +14,7 @@ class TagResource extends JsonResource
             'slug' => $this->slug,
             'usage_count' => $this->when(
                 isset($this->styles_count),
-                fn () => $this->styles_count + $this->people_count + $this->strategies_count,
+                fn () => $this->styles_count + $this->people_count + $this->strategies_count + $this->reference_items_count,
             ),
             'can' => $this->when(
                 $request->routeIs('tags.*'),

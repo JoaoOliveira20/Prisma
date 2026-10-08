@@ -1,8 +1,9 @@
+import { FilterContext } from "@/components/layout/FilterContext";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { LinkButton } from "@/components/ui/Button";
 import { Pagination } from "@/components/ui/Pagination";
 import { contentPaths, personToCard, strategyToCard, styleToCard } from "@/lib/content";
-import { getPeoplePage, getStrategiesPage, getStylesPage, getTags } from "@/lib/data";
+import { getPeoplePage, getStrategiesPage, getStyle, getStylesPage, getTags } from "@/lib/data";
 import { redirectIfBeyondLastPage } from "@/lib/pagination";
 import type { ContentType } from "@/types/api";
 import { ContentFilters } from "./ContentFilters";
@@ -43,7 +44,7 @@ const labels: Record<ContentType, { eyebrow: string; title: string; lede: string
   },
 };
 
-async function loadCards(type: ContentType, filters: { q?: string; tag?: string; page?: number; sort?: "name" | "recent" }) {
+async function loadCards(type: ContentType, filters: { q?: string; tag?: string; style?: string; page?: number; sort?: "name" | "recent" }) {
   if (type === "style") {
     const { data, meta } = await getStylesPage(filters);
     return { items: data.map(styleToCard), meta };
@@ -58,17 +59,22 @@ async function loadCards(type: ContentType, filters: { q?: string; tag?: string;
 
 type ContentBrowserProps = {
   type: ContentType;
-  searchParams: Promise<{ tag?: string; q?: string; page?: string; sort?: string }>;
+  searchParams: Promise<{ tag?: string; q?: string; style?: string; page?: string; sort?: string }>;
 };
 
 export async function ContentBrowser({ type, searchParams }: ContentBrowserProps) {
-  const { tag, q, page, sort: sortParam } = await searchParams;
+  const { tag, q, style: styleParam, page, sort: sortParam } = await searchParams;
   const sort = sortParam === "recent" ? "recent" : "name";
-  const [{ items, meta }, tags] = await Promise.all([loadCards(type, { tag, q, sort, page: Number(page) || undefined }), getTags()]);
-  const sortParams = { tag, q, sort: sort === "recent" ? sort : undefined };
+  const style = type !== "style" && typeof styleParam === "string" && styleParam !== "" ? styleParam : undefined;
+  const [{ items, meta }, tags, contextStyle] = await Promise.all([
+    loadCards(type, { tag, q, style, sort, page: Number(page) || undefined }),
+    getTags(),
+    style ? getStyle(style) : undefined,
+  ]);
+  const sortParams = { tag, q, style, sort: sort === "recent" ? sort : undefined };
   const path = contentPaths[type];
   redirectIfBeyondLastPage(meta, path, sortParams);
-  const isFiltered = Boolean(tag || q);
+  const isFiltered = Boolean(tag || q || style);
   const label = labels[type];
   const emptyMessage = isFiltered ? "Nada encontrado com esses filtros." : label.empty;
   const emptyAction = !isFiltered && <LinkButton href={`${path}/novo`}>{label.first}</LinkButton>;
@@ -76,11 +82,12 @@ export async function ContentBrowser({ type, searchParams }: ContentBrowserProps
   return (
     <>
       <PageHeader eyebrow={label.eyebrow} title={label.title} lede={label.lede} actions={<LinkButton href={`${path}/novo`} variant="secondary">{label.create}</LinkButton>} />
+      {contextStyle && <FilterContext kind="estilo" name={contextStyle.name} openHref={`${contentPaths.style}/${contextStyle.slug}`} clearHref={path} />}
       <div className="page-x space-y-5 border-y border-border py-5">
-        <ListSearch basePath={path} query={q} tag={tag} sort={sort} placeholder={label.search} />
-        <ContentFilters basePath={path} tags={tags} activeTag={tag} query={q} sort={sort} />
+        <ListSearch basePath={path} query={q} tag={tag} style={style} sort={sort} placeholder={label.search} />
+        <ContentFilters basePath={path} tags={tags} activeTag={tag} query={q} style={style} sort={sort} />
       </div>
-      <div className="page-x pt-12">
+      <div key={JSON.stringify(sortParams) + meta.current_page} className="page-x results-in pt-12">
         <p className="eyebrow tabular mb-8">{meta.total} {meta.total === 1 ? "registro" : "registros"}</p>
         {label.layout === "list" ? (
           <StrategyList items={items} emptyMessage={emptyMessage} emptyAction={emptyAction} />

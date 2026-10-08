@@ -22,6 +22,7 @@ export default async function PersonDetailPage({ params }: PageProps<"/pessoas/[
   const [person, groups] = await Promise.all([getPerson(slug), getGroups()]);
   const styles = person.styles ?? [];
   const references = person.references ?? [];
+  const referencesTotal = person.references_count ?? references.length;
   const facts = [
     ...(person.role ? [{ label: "Atuação", value: person.role }] : []),
     ...(person.origin ? [{ label: "Origem", value: person.origin }] : []),
@@ -30,7 +31,7 @@ export default async function PersonDetailPage({ params }: PageProps<"/pessoas/[
   const sections = [
     { id: "biografia", label: "Biografia" },
     { id: "estilos", label: "Estilos", count: styles.length },
-    { id: "referencias", label: "Referências", count: references.length },
+    { id: "referencias", label: "Referências", count: referencesTotal, ...(referencesTotal > 0 ? { href: `/pessoas/${person.slug}/referencias` } : {}) },
   ];
 
   return (
@@ -71,8 +72,9 @@ export default async function PersonDetailPage({ params }: PageProps<"/pessoas/[
         id="referencias"
         eyebrow="Imagens"
         title="Referências"
-        count={references.length}
+        count={referencesTotal}
         action={person.can.update && <AddReferenceButton type="person" slug={person.slug} />}
+        seeAll={referencesTotal > 0 ? { href: `/pessoas/${person.slug}/referencias`, label: `Ver todas as ${referencesTotal} referências` } : undefined}
       >
         <ReferenceGallery items={references.map(referenceToGalleryItem)} groups={groups} emptyMessage="Nenhuma referência adicionada ainda." />
       </DimensionSection>
