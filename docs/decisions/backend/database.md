@@ -16,7 +16,7 @@
 | `person_style`, `strategy_style` | Pessoas e estratégias ↔ estilos |
 | `referenceables` | Referência ↔ estilo/pessoa/estratégia (polimórfica) |
 | `groups`, `group_items` | Grupos por usuário; itens polimórficos |
-| `cache`, `jobs`, `sessions`* | Padrão do Laravel (drivers `database`) |
+| `jobs`, `sessions`* (e `cache`, sem uso) | Padrão do Laravel; sessão e filas com driver `database`. O **cache usa arquivo** (`CACHE_STORE=file`) |
 
 \* O driver de sessão está configurado como `database`, mas o app é API sem sessão.
 
@@ -50,5 +50,5 @@ Política atual: migrations existentes são editadas e o banco recriado com `koo
 
 ## Limitações
 
--   A unicidade do grupo Favoritos por usuário não é garantida por índice: `favoritesGroup()` usa um **lock de cache** (`Cache::lock`, driver `database`) para evitar duplicação em requisições simultâneas.
+-   A unicidade do grupo Favoritos por usuário não é garantida por índice: `favoritesGroup()` usa um **lock de cache** (`Cache::lock`, no cache de arquivo) para evitar duplicação em requisições simultâneas.
 -   Busca por `LIKE` sem índice de texto.

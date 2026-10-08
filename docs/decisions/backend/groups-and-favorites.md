@@ -10,7 +10,7 @@
 
 ## Endpoints e comportamento
 
--   `GET /groups`: lista do usuário, Favoritos primeiro, com `items_count`. Cria o grupo Favoritos se ainda não existir.
+-   `GET /groups`: lista do usuário, Favoritos primeiro, com `items_count` e **`previews`** (até 4 URLs de imagem dos itens mais recentes, para o mosaico da interface; itens sem imagem são ignorados). Cria o grupo Favoritos se ainda não existir.
 -   `GET /groups/{id}`: devolve o grupo e seus itens separados em `styles`, `people`, `strategies` e `references` (uma consulta por tipo, com tags/vínculos, `is_favorite` e, nas referências, `group_ids`).
 -   `POST /groups`, `PUT /groups/{id}`, `DELETE /groups/{id}`: criar, renomear, excluir. Favoritos não pode ser renomeado nem excluído (403). Excluir um grupo não exclui os conteúdos.
 -   `POST /groups/{id}/items` (`type`, `slug`) e `DELETE /groups/{id}/items/{type}/{slug}`: adicionar (idempotente) e remover.

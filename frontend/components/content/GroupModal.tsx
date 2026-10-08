@@ -30,7 +30,7 @@ export function GroupModal({ open, onClose, type, slug, groups, groupIds }: Grou
       <ul className="space-y-1">
         {groups.map((group) => (
           <li key={group.id}>
-            <label className="flex cursor-pointer items-center gap-3 rounded px-2 py-2 text-sm hover:bg-surface">
+            <label className="flex cursor-pointer items-center gap-3 rounded-sm px-2 py-2 text-sm hover:bg-surface">
               <input type="checkbox" checked={selectedIds.includes(group.id)} onChange={(event) => toggle(group, event.target.checked)} />
               <span className="truncate">{group.name}</span>
             </label>

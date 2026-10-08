@@ -17,13 +17,13 @@ export function ChipCheckboxes({ legend, name, options, selected = [], error, em
 
   return (
     <fieldset className="space-y-2">
-      <legend className="text-xs font-medium text-text-muted">{legend}</legend>
+      <legend className="text-sm font-medium text-text">{legend}</legend>
       {options.length === 0 && emptyMessage && <p className="text-xs text-text-muted">{emptyMessage}</p>}
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (
           <label key={option.value} className="cursor-pointer">
             <input type="checkbox" name={name} value={option.value} defaultChecked={selectedValues.has(option.value)} className="peer sr-only" />
-            <span className="inline-block rounded-full border border-border bg-surface-raised px-3 py-1 text-xs text-text-muted peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-foreground peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus-ring">
+            <span className="inline-block rounded-sm border border-border-strong px-3 py-1.5 text-xs text-text transition-colors hover:bg-surface peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-foreground peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus-ring">
               {option.label}
             </span>
           </label>

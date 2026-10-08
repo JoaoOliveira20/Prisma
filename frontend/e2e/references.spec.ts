@@ -46,8 +46,7 @@ test("biblioteca: criar por modal com upload e vínculo, editar, agrupar e remov
   await expect(page.getByRole("dialog", { name: "Salvar em grupo" }).getByRole("checkbox", { name: "Favoritos" })).toBeChecked();
   await page.getByRole("dialog", { name: "Salvar em grupo" }).getByRole("button", { name: "Fechar" }).click();
 
-  await page.goto("/grupos");
-  await page.getByRole("link", { name: /Favoritos/ }).click();
+  await page.goto("/favoritos");
   await expect(page.getByRole("button", { name: `Ampliar ${title}` })).toBeVisible();
 
   await page.goto(`/referencias?q=${encodeURIComponent(title)}`);
@@ -80,9 +79,8 @@ test("vincular a mesma imagem a mais de um estilo", async ({ page }) => {
   await createStyle(page, first);
   await createStyle(page, second);
 
-  await page.goto("/estilos");
+  await page.goto(`/estilos?q=${encodeURIComponent(first)}`);
   await page.getByRole("link", { name: new RegExp(first) }).first().click();
-  await page.getByRole("tab", { name: /Referências/ }).click();
   await page.getByRole("button", { name: "Adicionar referência" }).click();
   const modal = page.getByRole("dialog", { name: "Adicionar referência" });
   const title = uniqueName("Arte compartilhada");
@@ -91,19 +89,17 @@ test("vincular a mesma imagem a mais de um estilo", async ({ page }) => {
   await modal.getByRole("button", { name: "Adicionar", exact: true }).click();
   await expect(modal).toBeHidden();
   await page.reload();
-  await page.getByRole("tab", { name: /Referências \(1\)/ }).click();
+  await expect(page.getByRole("heading", { level: 2, name: /^Referências\s*1$/ })).toBeVisible();
   await expect(page.getByRole("button", { name: `Ampliar ${title}` })).toBeVisible();
 
-  await page.goto("/estilos");
+  await page.goto(`/estilos?q=${encodeURIComponent(second)}`);
   await page.getByRole("link", { name: new RegExp(second) }).first().click();
-  await page.getByRole("tab", { name: /Referências/ }).click();
   await page.getByRole("button", { name: "Adicionar referência" }).click();
   await modal.getByRole("tab", { name: "Vincular imagem existente" }).click();
   await modal.getByLabel(`Vincular ${title}`).check();
   await modal.getByRole("button", { name: /Vincular 1/ }).click();
   await expect(modal).toBeHidden();
   await page.reload();
-  await page.getByRole("tab", { name: /Referências \(1\)/ }).click();
   await page.getByRole("button", { name: `Ampliar ${title}` }).click();
   const lightbox = page.getByRole("dialog", { name: title });
   await expect(lightbox.getByRole("link", { name: first })).toBeVisible();
@@ -157,4 +153,30 @@ test("upload de capa em estilo próprio e remoção", async ({ page }) => {
   await page.getByRole("button", { name: "Salvar" }).click();
   await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
   await expect(page.locator(`img[alt="${name}"]`)).toHaveCount(0);
+});
+
+test("lightbox navega entre as imagens com botões e com as setas do teclado", async ({ page }) => {
+  await register(page);
+  await page.goto("/referencias?kind=style");
+  await page.waitForLoadState("networkidle");
+  const buttons = page.getByRole("button", { name: /^Ampliar / });
+  const total = await buttons.count();
+  expect(total).toBeGreaterThanOrEqual(3);
+  const firstTitle = (await buttons.first().getAttribute("aria-label"))!.replace("Ampliar ", "");
+
+  await buttons.first().click();
+  const lightbox = page.getByRole("dialog");
+  await expect(lightbox.getByText(`1 de ${total}`)).toBeVisible();
+  await expect(lightbox.getByRole("heading", { level: 3, name: firstTitle })).toBeVisible();
+
+  await page.keyboard.press("ArrowRight");
+  await expect(lightbox.getByText(`2 de ${total}`)).toBeVisible();
+  await lightbox.getByRole("button", { name: "Próxima imagem" }).click();
+  await expect(lightbox.getByText(`3 de ${total}`)).toBeVisible();
+  await page.keyboard.press("ArrowLeft");
+  await lightbox.getByRole("button", { name: "Imagem anterior" }).click();
+  await expect(lightbox.getByText(`1 de ${total}`)).toBeVisible();
+
+  await page.keyboard.press("ArrowLeft");
+  await expect(lightbox.getByText(`${total} de ${total}`)).toBeVisible();
 });

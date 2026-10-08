@@ -27,7 +27,7 @@ export function FavoriteButton({ type, slug, isFavorite, className = "" }: Favor
       onClick={toggle}
       aria-pressed={optimisticFavorite}
       aria-label={optimisticFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
-      className={`grid size-8 place-items-center rounded-full bg-surface-raised/90 text-text shadow-sm transition-colors hover:bg-surface-raised ${className}`}
+      className={`grid size-9 place-items-center rounded-full bg-surface-raised/95 text-text transition hover:bg-surface-raised ${className}`}
     >
       <svg viewBox="0 0 24 24" className="size-4" fill={optimisticFavorite ? "var(--color-accent)" : "none"} stroke={optimisticFavorite ? "var(--color-accent)" : "currentColor"} strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">
         <path d="M12 20s-8-5-8-11a4.5 4.5 0 018-2.5A4.5 4.5 0 0120 9c0 6-8 11-8 11z" />

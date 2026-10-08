@@ -15,8 +15,8 @@ export function CreateTagForm() {
   }, [state]);
 
   return (
-    <Form ref={formRef} action={action} className="flex max-w-md flex-wrap items-end gap-3">
-      <div className="min-w-48 flex-1">
+    <Form ref={formRef} action={action} className="flex flex-wrap items-end gap-x-4 gap-y-3">
+      <div className="w-full max-w-sm">
         <TextField label="Nova tag" name="name" required maxLength={40} placeholder="Ex.: Surrealismo" error={state?.errors?.name?.[0]} />
       </div>
       <Button type="submit" disabled={pending}>{pending ? "Criando…" : "Criar tag"}</Button>

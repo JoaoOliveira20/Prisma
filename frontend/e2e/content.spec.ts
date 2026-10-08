@@ -21,9 +21,9 @@ test("criar estilo, favoritar, agrupar, editar e excluir", async ({ page }) => {
   await groupModal.getByRole("button", { name: "Fechar" }).click();
   await expect(groupModal).toBeHidden();
 
-  await page.goto("/grupos");
-  await page.getByRole("link", { name: /Favoritos/ }).click();
-  await expect(page.getByRole("heading", { name })).toBeVisible();
+  await page.goto("/favoritos");
+  await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 3, name })).toBeVisible();
 
   await page.goto(`/estilos?q=${encodeURIComponent(name)}`);
   await page.getByRole("link", { name: new RegExp(name) }).first().click();
@@ -82,10 +82,10 @@ test("pessoa e estratégia vinculadas a estilo próprio aparecem nas abas do est
 
   await page.goto(`/estilos?q=${encodeURIComponent(style)}`);
   await page.getByRole("link", { name: new RegExp(style) }).first().click();
-  await page.getByRole("tab", { name: /Pessoas \(1\)/ }).click();
-  await expect(page.getByRole("heading", { name: person })).toBeVisible();
-  await page.getByRole("tab", { name: /Estratégias \(1\)/ }).click();
-  await expect(page.getByRole("heading", { name: strategy })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: /^Pessoas\s*1$/ })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 3, name: person })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: /^Estratégias\s*1$/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: new RegExp(strategy) })).toBeVisible();
 });
 
 test("busca na listagem e filtro por tag", async ({ page }) => {
@@ -98,7 +98,7 @@ test("busca na listagem e filtro por tag", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Minimalismo" })).toHaveCount(0);
 
   await page.goto("/explorar");
-  await page.getByRole("link", { name: "Urbano" }).click();
+  await page.getByRole("navigation", { name: "Filtrar por tag" }).getByRole("link", { name: "Urbano" }).click();
   await expect(page.getByRole("heading", { name: "Brutalismo" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Bauhaus" })).toHaveCount(0);
 
@@ -122,22 +122,19 @@ test("erro de validação do servidor preserva o que foi digitado", async ({ pag
 test("coração de itens relacionados e do lightbox reflete o estado salvo", async ({ page }) => {
   await register(page);
   await page.goto("/pessoas");
-  const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Dieter Rams" }) });
+  const card = page.getByRole("figure").filter({ has: page.getByRole("heading", { name: "Dieter Rams" }) });
   await card.getByRole("button", { name: "Adicionar aos favoritos" }).click();
   await expect(card.getByRole("button", { name: "Remover dos favoritos" })).toBeVisible();
 
   await page.goto("/estilos/minimalismo");
-  await page.getByRole("tab", { name: /Pessoas/ }).click();
-  const related = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Dieter Rams" }) });
+  const related = page.getByRole("figure").filter({ has: page.getByRole("heading", { name: "Dieter Rams" }) });
   await expect(related.getByRole("button", { name: "Remover dos favoritos" })).toBeVisible();
 
-  await page.getByRole("tab", { name: /Referências/ }).click();
   await page.getByRole("button", { name: /Ampliar/ }).first().click();
   const dialog = page.getByRole("dialog", { name: /Composição/ });
   await dialog.getByRole("button", { name: "Adicionar aos favoritos" }).click();
   await expect(dialog.getByRole("button", { name: "Remover dos favoritos" })).toBeVisible();
   await page.reload();
-  await page.getByRole("tab", { name: /Referências/ }).click();
   await page.getByRole("button", { name: /Ampliar/ }).first().click();
   const reopened = page.getByRole("dialog", { name: /Composição/ });
   await expect(reopened.getByRole("button", { name: "Remover dos favoritos" })).toBeVisible();
@@ -165,4 +162,97 @@ test("paginação: página 2, vazia além da última e navegação", async ({ pa
   await page.goto(`/estilos?q=${encodeURIComponent(prefix)}&page=99`);
   await expect(page).toHaveURL(/page=2/);
   await expect(page.getByText("Página 2 de 2")).toBeVisible();
+});
+
+test("início apresenta o destaque e a porta de entrada para cada dimensão", async ({ page }) => {
+  await register(page);
+  await expect(page.getByRole("heading", { level: 1, name: "Uma coisa → várias dimensões." })).toBeVisible();
+  const main = page.getByRole("main");
+  for (const dimension of ["Estilos", "Pessoas", "Estratégias", "Referências"]) {
+    await expect(main.getByRole("link", { name: new RegExp(`^${dimension}\\s*\\d+`) })).toBeVisible();
+  }
+  await expect(main.getByText("Em destaque")).toBeVisible();
+  await main.getByRole("link", { name: /^Pessoas\s*\d+/ }).click();
+  await expect(page).toHaveURL(/\/pessoas$/);
+});
+
+test("barra lateral organiza o arquivo em grupos e marca a página atual", async ({ page }) => {
+  await register(page);
+  await page.goto("/estilos");
+  const nav = page.getByRole("navigation", { name: "Principal" });
+  for (const group of ["Arquivo", "Dimensões", "Coleções", "Vocabulário"]) {
+    await expect(nav.getByText(group, { exact: true })).toBeVisible();
+  }
+  await expect(nav.getByRole("link", { name: "Estilos" })).toHaveAttribute("aria-current", "page");
+  await expect(nav.getByRole("link", { name: "Pessoas" })).not.toHaveAttribute("aria-current", "page");
+
+  await nav.getByRole("link", { name: "Favoritos" }).click();
+  await expect(page).toHaveURL(/\/favoritos$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible();
+});
+
+test("detalhe do estilo é uma página contínua com índice de dimensões e estilos relacionados", async ({ page }) => {
+  await register(page);
+  await page.goto("/estilos/bauhaus");
+  for (const title of ["História", "Características", "Influências", "Pessoas", "Estratégias", "Referências", "Estilos relacionados"]) {
+    await expect(page.getByRole("heading", { level: 2, name: new RegExp(`^${title}`) })).toBeVisible();
+  }
+  await expect(page.getByRole("figure").filter({ has: page.getByRole("heading", { name: "Minimalismo" }) })).toBeVisible();
+
+  const index = page.getByRole("navigation", { name: "Dimensões deste conteúdo" });
+  await index.getByRole("link", { name: /^Estratégias/ }).click();
+  await expect(page).toHaveURL(/#estrategias$/);
+  await expect(page.getByRole("heading", { level: 2, name: /^Estratégias/ })).toBeInViewport();
+  await expect(index.getByRole("link", { name: /^Estratégias/ })).toHaveAttribute("aria-current", "location");
+});
+
+test("ciclo de vida de uma coleção: criar, renomear e excluir", async ({ page }) => {
+  await register(page);
+  const name = uniqueName("Coleção");
+  const renamed = `${name} renomeada`;
+
+  await page.goto("/grupos");
+  await page.getByRole("button", { name: "Nova coleção" }).click();
+  const create = page.getByRole("dialog", { name: "Nova coleção" });
+  await create.getByLabel("Nome da coleção").fill(name);
+  await create.getByRole("button", { name: "Criar coleção" }).click();
+  await expect(create).toBeHidden();
+  await page.getByRole("main").getByRole("link", { name: new RegExp(name) }).click();
+  await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
+
+  await chooseMenuAction(page, "Renomear");
+  const rename = page.getByRole("dialog", { name: "Renomear coleção" });
+  await rename.getByLabel("Nome da coleção").fill(renamed);
+  await rename.getByRole("button", { name: "Renomear" }).click();
+  await expect(rename).toBeHidden();
+  await expect(page.getByRole("heading", { level: 1, name: renamed })).toBeVisible();
+
+  await chooseMenuAction(page, "Excluir");
+  await page.getByRole("dialog", { name: `Excluir "${renamed}"?` }).getByRole("button", { name: "Excluir" }).click();
+  await expect(page).toHaveURL(/\/grupos$/);
+  await expect(page.getByText(renamed)).toHaveCount(0);
+});
+
+test("coleção mostra mosaico com as imagens guardadas", async ({ page }) => {
+  await register(page);
+  await page.goto("/estilos/bauhaus");
+  await page.getByRole("button", { name: "Adicionar aos favoritos" }).first().click();
+  await expect(page.getByRole("button", { name: "Remover dos favoritos" }).first()).toBeVisible();
+
+  await page.goto("/grupos");
+  const cover = page.getByRole("main").getByRole("link", { name: /Favoritos/ });
+  await expect(cover.getByText("1 item")).toBeVisible();
+  await expect(cover.locator("img")).toHaveCount(1);
+});
+
+test("formulário mostra pré-visualização da imagem escolhida", async ({ page }) => {
+  await register(page);
+  await page.goto("/estilos/novo");
+  await expect(page.getByText("Sem imagem")).toBeVisible();
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "capa.png",
+    mimeType: "image/png",
+    buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64"),
+  });
+  await expect(page.locator('img[alt="Pré-visualização da imagem"]')).toHaveAttribute("src", /^blob:/);
 });

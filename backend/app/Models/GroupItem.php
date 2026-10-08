@@ -29,4 +29,15 @@ class GroupItem extends Model
 
         return $class::where((new $class)->getRouteKeyName(), $slug)->firstOrFail();
     }
+
+    public function previewUrl(): ?string
+    {
+        $item = $this->groupable;
+
+        if ($item === null) {
+            return null;
+        }
+
+        return method_exists($item, 'displayImageUrl') ? $item->displayImageUrl() : $item->displayUrl();
+    }
 }

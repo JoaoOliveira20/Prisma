@@ -1,23 +1,24 @@
 import type { ReactNode } from "react";
-import { SearchTrigger } from "@/components/search/SearchTrigger";
 
 type PageHeaderProps = {
+  eyebrow: string;
   title: string;
-  subtitle?: string;
+  lede?: string;
   actions?: ReactNode;
 };
 
-export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
+export function PageHeader({ eyebrow, title, lede, actions }: PageHeaderProps) {
   return (
-    <header className="flex flex-wrap items-start justify-between gap-4 px-5 pb-6 pt-8 sm:px-10">
-      <div>
-        <h1 className="font-serif text-3xl">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-text-muted">{subtitle}</p>}
+    <header className="page-x flex flex-wrap items-end justify-between gap-x-10 gap-y-6 pb-10 pt-12 sm:pt-16">
+      <div className="min-w-0">
+        <div className="flex items-center gap-3">
+          <span className="spectrum-rule" aria-hidden="true" />
+          <p className="eyebrow">{eyebrow}</p>
+        </div>
+        <h1 className="mt-5 font-serif text-5xl leading-[1.02] tracking-tight sm:text-6xl">{title}</h1>
+        {lede && <p className="mt-5 max-w-xl text-base leading-relaxed text-text-muted">{lede}</p>}
       </div>
-      <div className="flex w-full items-center gap-3 sm:w-auto">
-        <SearchTrigger />
-        {actions}
-      </div>
+      {actions && <div className="flex shrink-0 items-center gap-3">{actions}</div>}
     </header>
   );
 }

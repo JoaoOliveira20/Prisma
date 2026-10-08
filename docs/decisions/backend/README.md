@@ -26,7 +26,7 @@ API REST em Laravel 13 (PHP 8.3), MySQL 8 e Sanctum, em `backend/`. Responsável
 
 ## Testes
 
-`kool run phpunit`: 47 testes de feature em `tests/Feature/` (autenticação, estilos, pessoas e estratégias, referências, grupos e favoritos, tags, seeder). Rodam com **SQLite em memória** (`phpunit.xml`), nunca tocam o MySQL de desenvolvimento. O armazenamento é simulado com `Storage::fake('public')`. Formatação: `kool run composer exec pint`.
+`kool run phpunit`: 56 testes de feature em `tests/Feature/` (autenticação, estilos, pessoas e estratégias, referências, grupos e favoritos, tags, seeder). Rodam com **SQLite em memória** (`phpunit.xml`), nunca tocam o MySQL de desenvolvimento. O armazenamento é simulado com `Storage::fake('public')`. Formatação: `kool run composer exec pint`.
 
 ## Lições registradas
 

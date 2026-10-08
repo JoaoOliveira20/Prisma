@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { ContentGrid } from "@/components/content/ContentGrid";
 import { DetailActions } from "@/components/content/DetailActions";
 import { Paragraphs } from "@/components/content/Paragraphs";
-import { CoverImage } from "@/components/content/CoverImage";
-import { TagList } from "@/components/content/TagList";
-import { EntityReferences } from "@/components/references/EntityReferences";
-import { Tabs } from "@/components/ui/Tabs";
+import { DetailHeader } from "@/components/layout/DetailHeader";
+import { DimensionSection } from "@/components/layout/DimensionSection";
+import { SectionNav } from "@/components/layout/SectionNav";
+import { AddReferenceButton } from "@/components/references/AddReferenceButton";
+import { ReferenceGallery } from "@/components/references/ReferenceGallery";
 import { EmptySection } from "@/components/ui/EmptySection";
-import { styleToCard } from "@/lib/content";
+import { referenceToGalleryItem, styleToCard } from "@/lib/content";
 import { getGroups, getStrategy } from "@/lib/data";
 
 export async function generateMetadata({ params }: PageProps<"/estrategias/[slug]">): Promise<Metadata> {
@@ -23,41 +23,23 @@ export default async function StrategyDetailPage({ params }: PageProps<"/estrate
   const styles = strategy.styles ?? [];
   const references = strategy.references ?? [];
 
-  const tabs = [
-    {
-      id: "description",
-      label: "Descrição",
-      content: strategy.description ? <Paragraphs text={strategy.description} /> : <EmptySection message="A descrição ainda não foi escrita." />,
-    },
-    {
-      id: "styles",
-      label: `Estilos (${styles.length})`,
-      content: <ContentGrid items={styles.map(styleToCard)} emptyMessage="Nenhum estilo relacionado a esta estratégia." />,
-    },
-    {
-      id: "references",
-      label: `Referências (${references.length})`,
-      content: <EntityReferences type="strategy" slug={strategy.slug} references={references} groups={groups} canAdd={strategy.can.update} />,
-    },
+  const sections = [
+    { id: "descricao", label: "Descrição" },
+    { id: "estilos", label: "Aplica-se a", count: styles.length },
+    { id: "referencias", label: "Referências", count: references.length },
   ];
 
   return (
-    <article className="px-5 pb-12 pt-8 sm:px-10">
-      <nav aria-label="Trilha" className="mb-6 text-xs text-text-muted">
-        <Link href="/estrategias" className="hover:text-text">Estratégias</Link> <span aria-hidden="true">/</span> <span>{strategy.name}</span>
-      </nav>
-
-      <div className="grid gap-8 md:grid-cols-[18rem_1fr]">
-        <CoverImage name={strategy.name} coverUrl={strategy.cover_url} sizes="(min-width: 768px) 18rem, 100vw" className="aspect-square w-full rounded-lg" />
-        <div className="space-y-5">
-          <div>
-            <h1 className="font-serif text-4xl">{strategy.name}</h1>
-            {strategy.category && <p className="mt-1 text-sm text-text-muted">{strategy.category}</p>}
-            {strategy.summary && <p className="mt-3 max-w-prose text-text-muted">{strategy.summary}</p>}
-          </div>
-
-          <TagList tags={strategy.tags ?? []} />
-
+    <article>
+      <DetailHeader
+        crumbs={[{ label: "Estratégias", href: "/estrategias" }, { label: strategy.name }]}
+        kind={strategy.category ? `Estratégia · ${strategy.category}` : "Estratégia"}
+        title={strategy.name}
+        lede={strategy.summary}
+        tags={strategy.tags}
+        image={{ name: strategy.name, url: strategy.cover_url, aspect: "aspect-[4/3]" }}
+        layout="wide-right"
+        actions={
           <DetailActions
             type="strategy"
             slug={strategy.slug}
@@ -69,12 +51,25 @@ export default async function StrategyDetailPage({ params }: PageProps<"/estrate
             canUpdate={strategy.can.update}
             canDelete={strategy.can.delete}
           />
-        </div>
-      </div>
+        }
+      />
+      <SectionNav sections={sections} />
 
-      <div className="mt-10">
-        <Tabs tabs={tabs} />
-      </div>
+      <DimensionSection id="descricao" eyebrow="Dimensão" title="Descrição">
+        {strategy.description ? <Paragraphs text={strategy.description} /> : <EmptySection message="A descrição ainda não foi escrita." />}
+      </DimensionSection>
+      <DimensionSection id="estilos" eyebrow="Conexão" title="Aplica-se a" count={styles.length}>
+        <ContentGrid items={styles.map(styleToCard)} emptyMessage="Nenhum estilo relacionado a esta estratégia." />
+      </DimensionSection>
+      <DimensionSection
+        id="referencias"
+        eyebrow="Imagens"
+        title="Referências"
+        count={references.length}
+        action={strategy.can.update && <AddReferenceButton type="strategy" slug={strategy.slug} />}
+      >
+        <ReferenceGallery items={references.map(referenceToGalleryItem)} groups={groups} emptyMessage="Nenhuma referência adicionada ainda." />
+      </DimensionSection>
     </article>
   );
 }

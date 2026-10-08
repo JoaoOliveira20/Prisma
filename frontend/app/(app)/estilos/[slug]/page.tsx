@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { ContentGrid } from "@/components/content/ContentGrid";
 import { DetailActions } from "@/components/content/DetailActions";
+import { NumberedList } from "@/components/content/NumberedList";
 import { Paragraphs } from "@/components/content/Paragraphs";
-import { CoverImage } from "@/components/content/CoverImage";
-import { TagList } from "@/components/content/TagList";
-import { EntityReferences } from "@/components/references/EntityReferences";
-import { Tabs } from "@/components/ui/Tabs";
+import { StrategyList } from "@/components/content/StrategyList";
+import { DetailHeader } from "@/components/layout/DetailHeader";
+import { DimensionSection } from "@/components/layout/DimensionSection";
+import { SectionNav } from "@/components/layout/SectionNav";
+import { AddReferenceButton } from "@/components/references/AddReferenceButton";
+import { ReferenceGallery } from "@/components/references/ReferenceGallery";
 import { EmptySection } from "@/components/ui/EmptySection";
-import { personToCard, strategyToCard } from "@/lib/content";
+import { personToCard, referenceToGalleryItem, strategyToCard, styleToCard } from "@/lib/content";
 import { getGroups, getStyle } from "@/lib/data";
 
 export async function generateMetadata({ params }: PageProps<"/estilos/[slug]">): Promise<Metadata> {
@@ -23,80 +25,34 @@ export default async function StyleDetailPage({ params }: PageProps<"/estilos/[s
   const references = style.references ?? [];
   const people = style.people ?? [];
   const strategies = style.strategies ?? [];
+  const related = (style.related ?? []).slice(0, 3);
+  const facts = [
+    ...(style.period ? [{ label: "Período", value: style.period }] : []),
+    ...(style.origin ? [{ label: "Origem", value: style.origin }] : []),
+  ];
 
-  const tabs = [
-    {
-      id: "history",
-      label: "História",
-      content: style.history ? <Paragraphs text={style.history} /> : <EmptySection message="A história deste estilo ainda não foi escrita." />,
-    },
-    {
-      id: "characteristics",
-      label: "Características",
-      content:
-        style.characteristics.length > 0 ? (
-          <ul className="grid max-w-xl gap-2 sm:grid-cols-2">
-            {style.characteristics.map((item) => (
-              <li key={item} className="rounded-md border border-border bg-surface-raised px-4 py-3 text-sm">{item}</li>
-            ))}
-          </ul>
-        ) : (
-          <EmptySection message="Nenhuma característica registrada." />
-        ),
-    },
-    {
-      id: "influences",
-      label: "Influências",
-      content: style.influences ? <p className="max-w-prose text-[15px] leading-relaxed">{style.influences}</p> : <EmptySection message="Nenhuma influência registrada." />,
-    },
-    {
-      id: "people",
-      label: `Pessoas (${people.length})`,
-      content: <ContentGrid items={people.map(personToCard)} emptyMessage="Nenhuma pessoa relacionada a este estilo." />,
-    },
-    {
-      id: "strategies",
-      label: `Estratégias (${strategies.length})`,
-      content: <ContentGrid items={strategies.map(strategyToCard)} emptyMessage="Nenhuma estratégia relacionada a este estilo." />,
-    },
-    {
-      id: "references",
-      label: `Referências (${references.length})`,
-      content: <EntityReferences type="style" slug={style.slug} references={references} groups={groups} canAdd={style.can.update} />,
-    },
+  const sections = [
+    { id: "historia", label: "História" },
+    { id: "caracteristicas", label: "Características", count: style.characteristics.length },
+    { id: "influencias", label: "Influências" },
+    { id: "pessoas", label: "Pessoas", count: people.length },
+    { id: "estrategias", label: "Estratégias", count: strategies.length },
+    { id: "referencias", label: "Referências", count: references.length },
+    ...(related.length > 0 ? [{ id: "relacionados", label: "Estilos relacionados", count: related.length }] : []),
   ];
 
   return (
-    <article className="px-5 pb-12 pt-8 sm:px-10">
-      <nav aria-label="Trilha" className="mb-6 text-xs text-text-muted">
-        <Link href="/estilos" className="hover:text-text">Estilos</Link> <span aria-hidden="true">/</span> <span>{style.name}</span>
-      </nav>
-
-      <div className="grid gap-8 md:grid-cols-[18rem_1fr]">
-        <CoverImage name={style.name} coverUrl={style.cover_url} sizes="(min-width: 768px) 18rem, 100vw" className="aspect-square w-full rounded-lg" />
-        <div className="space-y-5">
-          <div>
-            <h1 className="font-serif text-4xl">{style.name}</h1>
-            {style.summary && <p className="mt-2 max-w-prose text-text-muted">{style.summary}</p>}
-          </div>
-
-          <dl className="flex flex-wrap gap-x-10 gap-y-3 text-sm">
-            {style.period && (
-              <div>
-                <dt className="text-xs text-text-muted">Período</dt>
-                <dd>{style.period}</dd>
-              </div>
-            )}
-            {style.origin && (
-              <div>
-                <dt className="text-xs text-text-muted">Origem</dt>
-                <dd>{style.origin}</dd>
-              </div>
-            )}
-          </dl>
-
-          <TagList tags={style.tags ?? []} />
-
+    <article>
+      <DetailHeader
+        crumbs={[{ label: "Estilos", href: "/estilos" }, { label: style.name }]}
+        kind="Estilo"
+        title={style.name}
+        lede={style.summary}
+        facts={facts}
+        tags={style.tags}
+        image={{ name: style.name, url: style.cover_url, aspect: "aspect-[4/3]" }}
+        layout="wide"
+        actions={
           <DetailActions
             type="style"
             slug={style.slug}
@@ -108,12 +64,39 @@ export default async function StyleDetailPage({ params }: PageProps<"/estilos/[s
             canUpdate={style.can.update}
             canDelete={style.can.delete}
           />
-        </div>
-      </div>
+        }
+      />
+      <SectionNav sections={sections} />
 
-      <div className="mt-10">
-        <Tabs tabs={tabs} />
-      </div>
+      <DimensionSection id="historia" eyebrow="Dimensão" title="História">
+        {style.history ? <Paragraphs text={style.history} /> : <EmptySection message="A história deste estilo ainda não foi escrita." />}
+      </DimensionSection>
+      <DimensionSection id="caracteristicas" eyebrow="Dimensão" title="Características" count={style.characteristics.length}>
+        {style.characteristics.length > 0 ? <NumberedList items={style.characteristics} /> : <EmptySection message="Nenhuma característica registrada." />}
+      </DimensionSection>
+      <DimensionSection id="influencias" eyebrow="Dimensão" title="Influências">
+        {style.influences ? <p className="max-w-2xl font-serif text-2xl leading-snug">{style.influences}</p> : <EmptySection message="Nenhuma influência registrada." />}
+      </DimensionSection>
+      <DimensionSection id="pessoas" eyebrow="Conexão" title="Pessoas" count={people.length}>
+        <ContentGrid items={people.map(personToCard)} layout="portraits-compact" emptyMessage="Nenhuma pessoa relacionada a este estilo." />
+      </DimensionSection>
+      <DimensionSection id="estrategias" eyebrow="Conexão" title="Estratégias" count={strategies.length}>
+        {strategies.length > 0 ? <StrategyList items={strategies.map(strategyToCard)} emptyMessage="" /> : <EmptySection message="Nenhuma estratégia relacionada a este estilo." />}
+      </DimensionSection>
+      <DimensionSection
+        id="referencias"
+        eyebrow="Imagens"
+        title="Referências"
+        count={references.length}
+        action={style.can.update && <AddReferenceButton type="style" slug={style.slug} />}
+      >
+        <ReferenceGallery items={references.map(referenceToGalleryItem)} groups={groups} emptyMessage="Nenhuma referência adicionada ainda." />
+      </DimensionSection>
+      {related.length > 0 && (
+        <DimensionSection id="relacionados" eyebrow="Conexão" title="Estilos relacionados" count={related.length}>
+          <ContentGrid items={related.map(styleToCard)} emptyMessage="" />
+        </DimensionSection>
+      )}
     </article>
   );
 }

@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Referências" };
 const validKinds = ["reference", "style", "person", "strategy"];
 
 export default async function ReferencesPage({ searchParams }: PageProps<"/referencias">) {
-  const { page, q, kind, style, mine } = await searchParams;
+  const { page, q, kind, style, mine, nova } = await searchParams;
   const query = typeof q === "string" && q !== "" ? q : undefined;
   const kindFilter = typeof kind === "string" && validKinds.includes(kind) ? kind : undefined;
   const styleFilter = typeof style === "string" && style !== "" ? style : undefined;
@@ -29,9 +29,15 @@ export default async function ReferencesPage({ searchParams }: PageProps<"/refer
 
   return (
     <>
-      <PageHeader title="Referências" subtitle="Todas as imagens do sistema: referências, capas de estilos e estratégias e fotos de pessoas." actions={<NewReferenceButton />} />
+      <PageHeader
+        eyebrow="Dimensão · Imagens"
+        title="Referências"
+        lede="Tudo o que o arquivo guarda em imagem: referências, capas de estilos e estratégias e retratos de pessoas."
+        actions={<NewReferenceButton defaultOpen={nova === "1"} />}
+      />
       <ImageFilters kind={kindFilter} q={query} style={styleFilter} mine={onlyMine} styles={styles} />
-      <div className="px-5 pb-12 sm:px-10">
+      <div className="page-x pt-12">
+        <p className="eyebrow tabular mb-8">{meta.total} {meta.total === 1 ? "imagem" : "imagens"}</p>
         <ReferenceGallery
           items={data}
           groups={groups}

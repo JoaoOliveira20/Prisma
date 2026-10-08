@@ -1,80 +1,70 @@
 # Páginas de conteúdo
 
-**Situação:** implementada. Cobre início, listagens e detalhes de **estilos**, **pessoas** e **estratégias**. Formulários: [content-forms.md](content-forms.md). Referências: [references.md](references.md).
+**Situação:** implementada, com a direção visual do [ADR-013](../adr/ADR-013-editorial-archive-direction.md). Cobre início, Explorar, listagens e detalhes de **estilos**, **pessoas** e **estratégias**. Formulários: [content-forms.md](content-forms.md). Referências: [references.md](references.md). Coleções: [groups-and-favorites.md](groups-and-favorites.md).
 
 ## Contexto
 
-É o núcleo do produto: consultar a enciclopédia visual, descobrir conteúdos e navegar entre eles (`../../IDEIA.md`).
+É o núcleo do produto: consultar o arquivo, descobrir e **navegar entre dimensões** de um conteúdo (`../../IDEIA.md`). Cada tipo de conteúdo tem composição própria; nenhuma tela é "cabeçalho + grade de cartões".
 
 ## Início (`app/(app)/page.tsx`)
 
--   Saudação com o primeiro nome do usuário.
--   **Destaque:** o estilo mais recente (`sort=recent`), em faixa larga com título sobre a imagem. Sem estilos, mostra estado vazio com botão "Novo estilo".
--   **Favoritos:** até 4 itens do grupo Favoritos (estilos, pessoas e estratégias juntos), com link "Ver grupo".
--   **Estilos recentes:** os 4 seguintes.
--   Referência: tela "02 inicio dashboard". Não há seções "pessoas recentemente adicionadas" nem "estratégias em alta" da referência.
+Entrada do arquivo pessoal, não um painel:
 
-## Listagens
+-   Título "Uma coisa → várias dimensões." (a frase de marca) e uma frase de convite.
+-   **Destaque:** o estilo mais recente, grande (imagem 4:3 em 7 colunas e texto em 5), com eyebrow, título de até `text-6xl` e "Abrir estilo →".
+-   **Dimensões:** índice tipográfico (Estilos, Pessoas, Estratégias, Referências) com a contagem de cada uma, cada linha um link grande com seta.
+-   **Adicionado recentemente:** 8 imagens (referências e capas) em mosaico com legenda.
+-   **Favoritos:** até 3 itens da coleção Favoritos, ou uma frase convidativa se estiver vazia.
+-   Sem estilos, aparece um convite para criar o primeiro.
 
-## Explorar × Estilos
+## Explorar (`app/(app)/explorar/page.tsx`)
 
-São páginas **diferentes**:
+Descoberta de **todo** o acervo (diferente de Estilos, que lista só estilos): título, faixa de ferramentas (busca única + índice de tags) e quatro seções, cada uma na composição do seu tipo: **Estilos** (5, em ritmo), **Imagens** (8, mosaico), **Pessoas** (4, retratos) e **Estratégias** (4, lista tipográfica), com contagem total e "Ver todos →" levando a busca e a tag. A seção Imagens some quando há filtro de tag (imagens não têm tags). Sem criação nem paginação.
 
--   **`/explorar`** (`app/(app)/explorar/page.tsx`) é a tela de **descoberta**: busca única e filtro por tag valendo para tudo, e seções — Estilos, Pessoas, Estratégias e Imagens — com os 8 itens mais recentes de cada uma, contagem total e "Ver todos →" para a lista completa (a busca e a tag são levadas junto). A seção Imagens some quando há filtro de tag (imagens não têm tags). Não tem botões de criar nem paginação.
--   **`/estilos`** é a **lista de estilos**: só estilos, com busca, ordenação, filtro por tag, paginação e botão "Novo estilo".
+## Listagens (`ContentBrowser`)
 
-Antes de 2026-10-08 as duas eram a mesma página com título diferente; foram separadas a pedido do responsável.
+`/estilos`, `/pessoas`, `/estrategias` usam o mesmo Server Component, parametrizado por tipo, mas **cada tipo tem sua grade**:
 
-## Listagens
+| Tipo | Composição |
+| --- | --- |
+| Estilos | **Ritmo** assimétrico em 12 colunas (7, 5, 4, 4, 4 repetidos; formatos 3:2, 4:5, quadrado; deslocamentos verticais) |
+| Pessoas | Retratos 4:5 (2/3/4 colunas), com deslocamento alternado em telas largas |
+| Estratégias | **Lista tipográfica** numerada: número, categoria, nome grande, resumo, tags, miniatura 4:3 e seta |
 
-Páginas `/estilos`, `/pessoas`, `/estrategias` usam o mesmo Server Component `components/content/ContentBrowser.tsx`, parametrizado por tipo (`style`, `person`, `strategy`):
+Cabeçalho (eyebrow "Dimensão · …", título, lede, botão de criar), faixa de ferramentas (busca com borda inferior, ordenação, "Buscar" e índice de tags como texto; o ativo é sublinhado), contagem ("5 registros") e paginação textual. Filtros e busca são **links/GET**, funcionam sem JavaScript e preservam a URL. A busca casa nome, resumo e também período e origem (estilos), atuação (pessoas) ou categoria (estratégias). Página inexistente volta para a última. Tiles de listagem usam `h2`; dentro de seções, `h3`.
 
-1.  Lê `searchParams` (`tag`, `q`) e chama a API (`lib/data.ts`).
-2.  Converte cada item para o formato de card (`lib/content.ts`: `styleToCard`, `personToCard`, `strategyToCard`).
-3.  Mostra filtros por tag (`ContentFilters`, links com `aria-current`), a grade (`ContentGrid`), a paginação e o botão de criar.
+Estados: vazio (frase em serifa + ação), vazio com filtro ("Nada encontrado com esses filtros."), carregando (esqueleto), erro e não encontrado (títulos grandes com ação).
 
-Pedir uma página além da última **redireciona para a última** (`redirectIfBeyondLastPage`, `lib/pagination.ts`).
+## Tile (`ImageTile`)
 
-A **paginação** (`components/ui/Pagination.tsx`, "Anterior / Página x de y / Próxima") também é feita por links com `?page=`, preservando `tag` e `q`; usa o `meta` devolvido pela API (24 por página).
+Imagem sem moldura (ou **placa tipográfica**), legenda estilo museu (eyebrow com metadados, título serifado, resumo de 2 linhas, tags em texto "A · B · C") e coração de favorito que só aparece no hover/foco (ou sempre, se favoritado ou em telas sem hover).
 
-Os filtros são **links** (URL com `?tag=`), então funcionam sem JavaScript e são compartilháveis. Cada listagem tem um **campo de busca próprio** (`components/content/ListSearch.tsx`, formulário `GET` que preserva a tag) e um seletor de **ordenação** (Nome / Mais recentes). A busca casa nome, resumo e também período e origem (estilos), atuação (pessoas) ou categoria (estratégias), e é como se "filtra por período/origem": digite `1919` ou `Alemanha`. Não há filtros estruturados de período/origem.
+## Detalhes: páginas de dimensões
 
-Estados: vazio sem filtro ("Ainda não há…" + botão de criar), vazio com filtro ("Nada encontrado com esses filtros"), carregamento (esqueleto de `loading.tsx`) e erro (`error.tsx`, com "Tentar novamente").
+`/estilos/[slug]`, `/pessoas/[slug]`, `/estrategias/[slug]` compartilham `DetailHeader` e uma sequência de seções (`DimensionSection`: rótulo à esquerda, conteúdo à direita). Não há abas: **todas as dimensões estão na página**, com um **índice fixo** no topo (`SectionNav`, links âncora com contagem; o item da seção visível recebe `aria-current="location"`).
 
-Referências visuais: "03 explorar estilos" (grade de cards com tags) e "05 pessoas designers" (retratos em proporção vertical: pessoas usam `aspect-[4/5]`, os demais `aspect-[4/3]`).
-
-## Card (`ContentCard`)
-
-Imagem (ou [fallback](design-system.md)), nome em serifa, metadados (período · origem; pessoas: atuação · período; estratégias: categoria), resumo limitado a 2 linhas, tags e o coração de favorito sobreposto (`FavoriteButton`, ver [grupos e favoritos](groups-and-favorites.md)).
-
-## Detalhes
-
-`/estilos/[slug]`, `/pessoas/[slug]`, `/estrategias/[slug]` têm a mesma estrutura:
-
--   Trilha de navegação, imagem principal (quadrada; retrato para pessoas), título, resumo, metadados, tags e `DetailActions` (`components/content/DetailActions.tsx`): o **coração** de favorito e um menu **"⋯"** (`components/ui/ActionMenu.tsx`) com **Salvar em grupo** (abre um modal com os grupos, `GroupModal`), **Editar** e **Excluir** (estes dois só para o dono). O menu fecha com `Esc` ou clique fora e navega com setas.
--   Abas (`components/ui/Tabs.tsx`, acessíveis com `role="tablist"`):
-    -   **Estilo:** História, Características, Influências, Pessoas, Estratégias, Referências.
-    -   **Pessoa:** Biografia, Estilos, Referências.
-    -   **Estratégia:** Descrição, Estilos, Referências.
--   As abas de relacionados (Pessoas, Estratégias, Estilos) reutilizam `ContentGrid`, permitindo navegar entre conteúdos relacionados.
--   Seções sem conteúdo mostram `EmptySection`; o conteúdo não precisa estar completo (`../../IDEIA.md`).
--   Parágrafos de texto longo vêm separados por linha em branco (`Paragraphs`), sem Markdown.
--   Referência visual: "04 detalhe estilo bauhaus" (imagem à esquerda, abas sob o cabeçalho). Pessoas e estratégias seguem a mesma estrutura por consistência (não há mockup específico).
-
-Excluir pede confirmação em um **modal** próprio (`ConfirmDialog`), não no diálogo do navegador; o mesmo vale para excluir tag, grupo e referência.
+-   **Cabeçalho:** trilha, eyebrow com filete espectral, título enorme, subtítulo/lede, fatos (período, origem ou atuação) em definição com filetes, tags em texto, ações (coração + menu "⋯" com Salvar em grupo, Editar e Excluir). Variações: estilo (imagem 4:3 à esquerda), pessoa (retrato 4:5 menor à esquerda, período como subtítulo), estratégia (imagem à direita).
+-   **Estilo:** História (abertura em serifa grande + corpo), Características (lista numerada), Influências, Pessoas (retratos), Estratégias (lista), Referências (mosaico + botão "Adicionar referência" para o dono) e **Estilos relacionados** (até 3, por tags em comum, vindos da API).
+-   **Pessoa:** Biografia, Estilos, Referências.
+-   **Estratégia:** Descrição, "Aplica-se a" (estilos), Referências.
+-   Seções sem conteúdo mostram uma frase curta em serifa. O conteúdo não precisa estar completo.
+-   Excluir pede confirmação em modal (`ConfirmDialog`).
 
 ## Decisões
 
--   **Um único `ContentBrowser`/`ContentGrid`/`ContentCard` para os três tipos**, com mapeadores em `lib/content.ts`. Evita três cópias quase idênticas; o custo é a camada de mapeamento. Reconsiderar se os tipos divergirem muito visualmente.
--   Rotas por **slug**, legíveis e estáveis (a API não altera o slug ao renomear).
--   Detalhes são páginas de servidor; a edição acontece em páginas próprias (`/…/editar`), não "dentro da página", como `FRONTEND.md` sugere ("edição dentro das páginas"). Edição inline não foi implementada.
+-   **Composição por tipo** em vez de uma grade única; ver ADR-013.
+-   **Páginas contínuas com índice fixo** em vez de abas: coerente com "várias dimensões" e sem esconder conteúdo.
+-   **Um `ContentBrowser`/`ContentGrid`/`ImageTile` para os três tipos**, com mapeadores em `lib/content.ts` e layouts selecionados por tipo; evita três cópias, ao custo de uma camada de apresentação.
+-   Rotas por **slug**, estáveis (a API não altera o slug ao renomear).
+-   Edição em páginas próprias (`/…/editar`), não inline (`FRONTEND.md` sugere edição "dentro da página"; edição inline não foi implementada).
 
 ## Limitações
 
--   Seletores de vínculo (estilos nos formulários de pessoa/estratégia/referência) carregam no máximo 100 itens.
--   Sem filtros estruturados por período/origem (só pela busca de texto) e só duas ordenações.
--   Aba "Pessoas" de um estilo mostra pessoas vinculadas a ele; não há como vincular a partir da página do estilo (o vínculo é editado na pessoa/estratégia).
+-   Estilos relacionados só existem para estilos (por tags); pessoas e estratégias não têm "relacionados" próprios.
+-   Seletores de vínculo (estilos nos formulários) carregam no máximo 100 itens.
+-   Só duas ordenações (nome e mais recentes); sem filtros estruturados por período ou origem (a busca de texto cobre).
+-   Sem retratos reais de demonstração, as pessoas aparecem como placas tipográficas.
 
 ## Arquivos
 
-`app/(app)/{page,estilos,explorar,pessoas,estrategias}/**`, `components/content/DiscoverySection.tsx`, `components/content/*`, `components/ui/{Tabs,EmptySection}.tsx`, `lib/content.ts`, `lib/data.ts`.
+`app/(app)/{page,explorar,estilos,pessoas,estrategias}/**`, `components/content/*` (`ImageTile`, `ContentGrid`, `StrategyList`, `CoverImage`, `ContentBrowser`, `ContentFilters`, `ListSearch`, `DetailActions`, `Paragraphs`, `NumberedList`), `components/layout/{PageHeader,Section,DimensionSection,DetailHeader,SectionNav}.tsx`, `lib/content.ts`, `lib/data.ts`.

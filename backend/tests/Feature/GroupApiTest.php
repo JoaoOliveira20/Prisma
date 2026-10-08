@@ -159,4 +159,22 @@ class GroupApiTest extends TestCase
 
         $this->assertSame(1, $user->groups()->where('is_favorites', true)->count());
     }
+
+    public function test_group_list_exposes_preview_images_of_its_items(): void
+    {
+        $user = User::factory()->create();
+        $withCover = Style::factory()->create(['cover_url' => 'https://example.com/a.jpg']);
+        $withoutImage = Style::factory()->create(['cover_url' => null]);
+        $reference = $user->referenceItems()->create(['title' => 'R', 'image_url' => 'https://example.com/r.jpg']);
+        Sanctum::actingAs($user);
+        $group = $user->groups()->create(['name' => 'Coleção']);
+
+        foreach ([['style', $withCover->slug], ['style', $withoutImage->slug], ['reference', (string) $reference->id]] as [$type, $slug]) {
+            $this->postJson("/api/groups/{$group->id}/items", ['type' => $type, 'slug' => $slug])->assertCreated();
+        }
+
+        $previews = collect($this->getJson('/api/groups')->json('data'))->firstWhere('name', 'Coleção')['previews'];
+
+        $this->assertEqualsCanonicalizing(['https://example.com/a.jpg', 'https://example.com/r.jpg'], $previews);
+    }
 }

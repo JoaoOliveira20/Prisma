@@ -8,11 +8,13 @@ Vocabulário **controlado** para classificar estilos, pessoas e estratégias. Um
 
 ## Tela `/tags` (`app/(app)/tags/page.tsx`)
 
--   Formulário "Nova tag" (`components/tags/CreateTagForm.tsx`): nome de até 40 caracteres; erros do servidor (nome vazio, nome já em uso) aparecem junto ao campo; sucesso mostra "Tag criada." e limpa o campo.
--   Lista em cartões (`components/tags/TagRow.tsx`): nome, número de conteúdos que usam a tag e atalhos "Estilos / Pessoas / Estratégias", que abrem a listagem filtrada por aquela tag (`?tag=slug`).
--   Para tags **do próprio usuário** aparecem: campo de renomear e botão **Excluir**. O botão fica **desabilitado** quando a tag está em uso (a API também recusa com 409). Excluir pede confirmação.
--   Tags do sistema (criadas pelo seeder) e de outros usuários aparecem como "somente leitura".
--   Item "Tags" na sidebar (`lib/navigation.ts`).
+Um **índice tipográfico do vocabulário**, em duas colunas em telas largas, na linguagem editorial ([ADR-013](../adr/ADR-013-editorial-archive-direction.md)):
+
+-   Cabeçalho "Vocabulário · Tags" e, numa faixa entre filetes, o formulário "Nova tag" (`CreateTagForm`): nome de até 40 caracteres; erros do servidor junto ao campo; sucesso mostra "Tag criada." e limpa o campo.
+-   Cada tag é uma linha (`TagRow`) com o nome em serifa grande, "N conteúdos" e atalhos "Estilos / Pessoas / Estratégias" (a listagem filtrada por aquela tag, `?tag=slug`).
+-   Para tags **do próprio usuário**: ações em texto **Renomear** (troca o nome por um campo inline com Salvar/Cancelar) e **Excluir** (confirmação em modal; **desabilitado** quando a tag está em uso, e a API também recusa com 409).
+-   Tags do sistema (criadas pelo seeder) e de outros usuários mostram "somente leitura" e não têm ações.
+-   Item "Tags" no grupo "Vocabulário" da sidebar.
 
 ## Uso nos formulários
 

@@ -11,10 +11,12 @@ export default async function TagsPage() {
 
   return (
     <>
-      <PageHeader title="Tags" subtitle="Vocabulário controlado usado para classificar estilos, pessoas e estratégias." />
-      <div className="space-y-8 px-5 pb-12 sm:px-10">
+      <PageHeader eyebrow="Vocabulário" title="Tags" lede="O vocabulário controlado do arquivo. Cada tag classifica estilos, pessoas e estratégias, e nasce aqui, de propósito." />
+      <div className="page-x border-y border-border py-6">
         <CreateTagForm />
-        <ul className="grid gap-3 lg:grid-cols-2">
+      </div>
+      <div className="page-x pt-4">
+        <ul className="lg:grid lg:grid-cols-2 lg:gap-x-16">
           {tags.map((tag) => (
             <TagRow key={tag.slug} tag={tag} />
           ))}

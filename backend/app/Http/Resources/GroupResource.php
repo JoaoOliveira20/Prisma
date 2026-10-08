@@ -13,6 +13,7 @@ class GroupResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'is_favorites' => $this->is_favorites,
+            'previews' => $this->when($this->previews !== null, fn () => $this->previews),
             'items_count' => $this->items_count ?? $this->items()->count(),
             'can' => [
                 'update' => $request->user()->can('update', $this->resource),

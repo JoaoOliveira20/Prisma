@@ -1,62 +1,91 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CoverImage } from "@/components/content/CoverImage";
 import { ContentGrid } from "@/components/content/ContentGrid";
+import { CoverImage } from "@/components/content/CoverImage";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { Section } from "@/components/layout/Section";
+import { ReferenceGallery } from "@/components/references/ReferenceGallery";
 import { LinkButton } from "@/components/ui/Button";
 import { personToCard, strategyToCard, styleToCard } from "@/lib/content";
-import { getCurrentUser, getGroup, getGroups, getStyles } from "@/lib/data";
+import { getCurrentUser, getGroup, getGroups, getImagesPage, getPeoplePage, getStrategiesPage, getStylesPage } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Início" };
 
 export default async function HomePage() {
-  const [user, recent, groups] = await Promise.all([getCurrentUser(), getStyles({ sort: "recent", perPage: 5 }), getGroups()]);
+  const [user, styles, people, strategies, images, groups] = await Promise.all([
+    getCurrentUser(),
+    getStylesPage({ sort: "recent", perPage: 1 }),
+    getPeoplePage({ perPage: 1 }),
+    getStrategiesPage({ perPage: 1 }),
+    getImagesPage({ perPage: 8 }),
+    getGroups(),
+  ]);
   const favoritesGroup = groups.find((group) => group.is_favorites);
   const favorites = favoritesGroup ? await getGroup(String(favoritesGroup.id)) : null;
   const favoriteCards = favorites
-    ? [...favorites.styles.map(styleToCard), ...favorites.people.map(personToCard), ...favorites.strategies.map(strategyToCard)]
+    ? [...favorites.styles.map(styleToCard), ...favorites.people.map(personToCard), ...favorites.strategies.map(strategyToCard)].slice(0, 3)
     : [];
-  const featured = recent[0];
+  const featured = styles.data[0];
+  const dimensions = [
+    { label: "Estilos", href: "/estilos", total: styles.meta.total },
+    { label: "Pessoas", href: "/pessoas", total: people.meta.total },
+    { label: "Estratégias", href: "/estrategias", total: strategies.meta.total },
+    { label: "Referências", href: "/referencias", total: images.meta.total },
+  ];
 
   return (
     <>
-      <PageHeader title="Início" subtitle={`Olá, ${user.name.split(" ")[0]}. Uma curadoria visual, em um só lugar.`} />
-      <div className="space-y-12 px-5 pb-12 sm:px-10">
+      <PageHeader
+        eyebrow={`Arquivo de ${user.name.split(" ")[0]}`}
+        title="Uma coisa → várias dimensões."
+        lede="Entre por uma imagem, um estilo, uma pessoa ou uma ideia, e siga as ligações entre eles."
+      />
+
+      <div className="page-x space-y-24 pb-8">
         {featured ? (
-          <Link href={`/estilos/${featured.slug}`} className="group relative block overflow-hidden rounded-lg">
-            <CoverImage name={featured.name} coverUrl={featured.cover_url} sizes="100vw" className="aspect-[21/9] min-h-56 w-full" />
-            <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-night/85 via-night/20 to-transparent p-6 text-night-text sm:p-8">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-night-muted">Mais recente</p>
-              <h2 className="mt-1 font-serif text-3xl sm:text-4xl">{featured.name}</h2>
-              {featured.summary && <p className="mt-2 max-w-lg text-sm text-night-muted">{featured.summary}</p>}
+          <Link href={`/estilos/${featured.slug}`} className="group grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-14">
+            <CoverImage name={featured.name} coverUrl={featured.cover_url} sizes="(min-width: 1024px) 58vw, 90vw" className="aspect-[4/3] w-full lg:col-span-7 [&_img]:transition-transform [&_img]:duration-700 group-hover:[&_img]:scale-[1.02]" />
+            <div className="flex flex-col justify-end lg:col-span-5">
+              <p className="eyebrow">Em destaque · Estilo{featured.period ? ` · ${featured.period}` : ""}</p>
+              <h2 className="mt-4 font-serif text-5xl leading-[1.02] tracking-tight xl:text-6xl">{featured.name}</h2>
+              {featured.summary && <p className="mt-5 max-w-md text-lg leading-relaxed text-text-muted">{featured.summary}</p>}
+              <span className="mt-8 text-sm underline-offset-4 group-hover:underline">Abrir estilo →</span>
             </div>
           </Link>
         ) : (
-          <div className="rounded-lg border border-dashed border-border px-6 py-14 text-center">
-            <p className="text-sm text-text-muted">Sua biblioteca está vazia. Comece criando um estilo.</p>
-            <div className="mt-4">
+          <div className="border-y border-border py-20">
+            <p className="max-w-lg font-serif text-3xl leading-snug text-text-muted">Seu arquivo ainda está vazio. Comece por um estilo.</p>
+            <div className="mt-8">
               <LinkButton href="/estilos/novo">Novo estilo</LinkButton>
             </div>
           </div>
         )}
 
-        <section aria-labelledby="favorites-heading" className="space-y-4">
-          <div className="flex items-baseline justify-between">
-            <h2 id="favorites-heading" className="font-serif text-xl">Favoritos</h2>
-            {favoritesGroup && <Link href={`/grupos/${favoritesGroup.id}`} className="text-xs text-text-muted hover:text-text">Ver grupo →</Link>}
-          </div>
-          <ContentGrid items={favoriteCards.slice(0, 4)} emptyMessage="Favorite conteúdos para encontrá-los rapidamente aqui." />
-        </section>
+        <Section id="home-dimensions" title="Dimensões">
+          <ul>
+            {dimensions.map((dimension) => (
+              <li key={dimension.href} className="border-t border-border first:border-t-0">
+                <Link href={dimension.href} className="group flex items-baseline justify-between gap-6 py-5">
+                  <span className="font-serif text-4xl leading-none transition-transform duration-300 group-hover:translate-x-2 sm:text-5xl">{dimension.label}</span>
+                  <span className="flex items-baseline gap-5 text-text-muted">
+                    <span className="tabular text-sm">{dimension.total}</span>
+                    <span aria-hidden="true" className="text-2xl transition-transform duration-300 group-hover:translate-x-1">→</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Section>
 
-        {recent.length > 1 && (
-          <section aria-labelledby="recent-heading" className="space-y-4">
-            <div className="flex items-baseline justify-between">
-              <h2 id="recent-heading" className="font-serif text-xl">Estilos recentes</h2>
-              <Link href="/estilos" className="text-xs text-text-muted hover:text-text">Ver todos →</Link>
-            </div>
-            <ContentGrid items={recent.slice(1, 5).map(styleToCard)} emptyMessage="" />
-          </section>
+        {images.data.length > 0 && (
+          <Section id="home-recent" title="Adicionado recentemente" seeAllHref="/referencias">
+            <ReferenceGallery items={images.data} groups={groups} />
+          </Section>
         )}
+
+        <Section id="home-favorites" title="Favoritos" seeAllHref={favoriteCards.length > 0 ? "/favoritos" : undefined}>
+          <ContentGrid items={favoriteCards} emptyMessage="Favorite algo e ele aparece aqui, ao alcance de um clique." />
+        </Section>
       </div>
     </>
   );

@@ -108,13 +108,22 @@ quando útil, arquivos afetados.
 
 -   2026-10-08: **ajustes de interface pedidos pelo responsável**: Explorar virou tela de descoberta (seções por tipo) distinta de Estilos; menu "⋯" nos detalhes (Salvar em grupo, Editar, Excluir); modais para adicionar/editar referência, salvar em grupo e confirmar exclusões (sem `confirm()` do navegador); biblioteca `/referencias` unificada (referências + capas + fotos) com descrição e filtros (origem, estilo, só o que criei, busca); vincular uma imagem a vários estilos (modal "Vincular imagem existente" e endpoints de vínculo); ADR-012. 53 testes PHPUnit e 29 E2E passando.
 
+-   2026-10-08: **paleta de pesquisa redesenhada** a partir de exemplo da Motion, sem a biblioteca: comandos de navegação e criação, filtro sem acento, destaque deslizante, setas em ciclo, rodapé de atalhos, animação de entrada/saída, ARIA completo; `/referencias?nova=1` abre o modal. Bugs achados e corrigidos: destaque ausente na primeira abertura, reabrir durante a animação de saída. 34 testes E2E.
+
+-   2026-10-08: **login em card de vidro fosco**: o formulário passou a um card translúcido com desfoque sobre o fundo `prism-light-dark.png`, abas em pílula, campos e botão mais refinados; a composição de duas colunas e o fluxo não mudaram. 34 testes E2E passando.
+
+-   2026-10-08: **login redesenhado como uma composição única** (análise crítica, 3 direções avaliadas, escolhida "feixe que atravessa e se dissolve"): arte única em tela cheia com zona calma para o formulário, formulário sem cartão com mostrar senha, separador "ou", "Esqueceu a senha?" e Google (ambos desabilitados, "em breve"), alternância pelo rodapé, foco claro e composição própria para tablet e mobile. Substitui o card de vidro. 40 testes E2E passando.
+
+-   2026-10-08: **redesenho completo da interface** (ADR-013), de forma autônoma: auditoria das 13 telas e do fluxo, direção "arquivo editorial" (tokens novos, serifa em escala grande, filetes, cantos retos, filete espectral), sidebar em índice com busca no topo e barra superior abaixo de 1024 px, Início como entrada do arquivo, Explorar como descoberta por seções, composição própria por tipo (ritmo em estilos, retratos em pessoas, lista tipográfica em estratégias, mosaico em referências e coleções, índice tipográfico em tags), detalhes como páginas contínuas de dimensões com índice fixo e estilos relacionados, formulários em duas colunas com pré-visualização, coleções com mosaico e `/favoritos`, lightbox com navegação, link "pular para o conteúdo". Backend: `related` em estilos e `previews` em grupos, limites de requisição configuráveis (`config/limits.php`), cache em arquivo. Bugs achados e corrigidos: ids duplicados de gradiente que apagavam o logotipo, estouro horizontal com nomes longos, limite de API apertado, deadlock raro no cache MySQL, indicador de desenvolvimento cobrindo "Sair". Verificação: 56 testes PHPUnit, 54 E2E (inclui axe sem violações WCAG AA).
+
 ## Pendências conhecidas da primeira entrega
 
 -   Imagem de referência não pode ser trocada depois de criada; estilos/pessoas sem imagem não aparecem na biblioteca; capas e fotos não viram referência.
 -   Seeders não incluem imagens: estilos, pessoas e estratégias demo usam o fallback visual até receberem imagem (agora é possível enviar arquivo).
 -   Seletores de vínculo limitados a 100 itens; mensagens de 404/500 da API não traduzidas.
 -   Testes E2E rodam manualmente (sem integração contínua) e dependem dos dados do seeder.
--   Sem retratos reais de pessoas (fallback visual); capas de demonstração são arte original em SVG.
+-   Sem retratos reais de pessoas (placas tipográficas); capas de demonstração são arte original em SVG. Muitas placas iguais enfraquecem a lista de pessoas.
+-   `GUIA-DE-DESIGN.md` (fora do repositório, anterior ao redesenho) está desatualizado; a referência vigente é `docs/decisions/frontend/design-system.md`.
 -   Sem página própria por tag nem mesclagem de tags; sem filtros estruturados de período/origem (a busca de texto cobre).
 -   Sem Content-Security-Policy; limite de login por IP exige encaminhar o IP real em produção.
 -   Recuperação de senha, login social e verificação de e-mail não implementados.

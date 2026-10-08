@@ -43,18 +43,26 @@ export function ReferenceGallery({ items, groups, emptyMessage = "Nenhuma imagem
 
   const current = selected && items.find((item) => item.key === selected.key);
   const shown = current ?? selected;
+  const position = shown ? items.findIndex((item) => item.key === shown.key) : -1;
+
+  const step = (delta: number) => {
+    const next = items[(position + delta + items.length) % items.length];
+    if (next) setSelected(next);
+  };
 
   return (
     <>
-      <ul className="columns-2 gap-4 sm:columns-3 lg:columns-4">
+      <ul className="columns-2 gap-x-5 md:columns-3 xl:columns-4">
         {items.map((item) => (
-          <li key={item.key} className="mb-5 break-inside-avoid">
-            <button type="button" onClick={() => open(item)} aria-label={`Ampliar ${item.title}`} className="block w-full overflow-hidden rounded-md bg-surface">
-              <Image src={item.image_url} alt={item.title} width={600} height={600} unoptimized className="h-auto w-full" />
+          <li key={item.key} className="group mb-9 break-inside-avoid">
+            <button type="button" onClick={() => open(item)} aria-label={`Ampliar ${item.title}`} className="block w-full overflow-hidden bg-surface">
+              <Image src={item.image_url} alt={item.title} width={600} height={600} unoptimized className="h-auto w-full transition-transform duration-700 group-hover:scale-[1.03]" />
             </button>
-            <p className="mt-2 text-sm leading-tight">{item.title}</p>
-            {item.description && <p className="mt-0.5 line-clamp-2 text-xs text-text-muted">{item.description}</p>}
-            {item.kind !== "reference" && <p className="mt-1 text-[11px] uppercase tracking-wider text-text-muted/80">{galleryKindLabels[item.kind]}</p>}
+            <div className="mt-3 space-y-1">
+              {item.kind !== "reference" && <p className="eyebrow">{galleryKindLabels[item.kind]}</p>}
+              <p className="font-serif text-lg leading-tight">{item.title}</p>
+              {item.description && <p className="line-clamp-2 text-xs leading-relaxed text-text-muted">{item.description}</p>}
+            </div>
           </li>
         ))}
       </ul>
@@ -63,17 +71,34 @@ export function ReferenceGallery({ items, groups, emptyMessage = "Nenhuma imagem
         ref={dialogRef}
         aria-label={shown?.title ?? "Imagem"}
         onClose={() => setSelected(null)}
+        onKeyDown={(event) => {
+          if (items.length < 2 || (event.target as HTMLElement).closest("input, textarea, [role='menu']")) return;
+          if (event.key === "ArrowLeft") step(-1);
+          if (event.key === "ArrowRight") step(1);
+        }}
         onClick={(event) => event.target === dialogRef.current && dialogRef.current.close()}
-        className="m-auto max-h-[92vh] w-[min(64rem,calc(100vw-2rem))] overflow-y-auto rounded-lg bg-night p-0 text-night-text backdrop:bg-night/80"
+        className="night-scope m-auto max-h-[94vh] w-[min(72rem,calc(100vw-2rem))] overflow-y-auto bg-night p-0 text-night-text backdrop:bg-night/90"
       >
         {shown && (
           <div>
-            <Image src={shown.image_url} alt={shown.title} width={1600} height={1200} unoptimized className="max-h-[70vh] w-full object-contain" />
+            <div className="relative">
+              <Image src={shown.image_url} alt={shown.title} width={1600} height={1200} unoptimized className="max-h-[70vh] w-full object-contain" />
+              {items.length > 1 && (
+                <>
+                  <button type="button" onClick={() => step(-1)} aria-label="Imagem anterior" className="absolute inset-y-0 left-0 w-1/5 text-left text-3xl text-night-text/0 transition-colors hover:text-night-text focus-visible:text-night-text">
+                    <span className="ml-4">←</span>
+                  </button>
+                  <button type="button" onClick={() => step(1)} aria-label="Próxima imagem" className="absolute inset-y-0 right-0 w-1/5 text-right text-3xl text-night-text/0 transition-colors hover:text-night-text focus-visible:text-night-text">
+                    <span className="mr-4">→</span>
+                  </button>
+                </>
+              )}
+            </div>
             <div className="flex flex-wrap items-start justify-between gap-4 p-5">
               <div className="min-w-0 space-y-2">
-                <p className="text-[11px] uppercase tracking-wider text-night-muted">{galleryKindLabels[shown.kind]}</p>
-                <h3 className="font-serif text-xl">{shown.title}</h3>
-                {shown.description && <p className="max-w-prose text-sm text-night-muted">{shown.description}</p>}
+                <p className="eyebrow !text-night-muted">{galleryKindLabels[shown.kind]}{items.length > 1 && ` · ${position + 1} de ${items.length}`}</p>
+                <h3 className="font-serif text-3xl leading-tight">{shown.title}</h3>
+                {shown.description && <p className="max-w-prose text-base leading-relaxed text-night-muted">{shown.description}</p>}
                 {shown.credit && <p className="text-xs text-night-muted">Crédito: {shown.credit}</p>}
                 {shown.source_url && (
                   <a href={shown.source_url} target="_blank" rel="noopener noreferrer" className="block text-xs underline">
@@ -89,7 +114,7 @@ export function ReferenceGallery({ items, groups, emptyMessage = "Nenhuma imagem
                   <ul className="flex flex-wrap gap-2 pt-1" aria-label="Conteúdos vinculados">
                     {shown.links.map((link) => (
                       <li key={`${link.type}-${link.slug}`}>
-                        <Link href={`${contentPaths[link.type]}/${link.slug}`} className="rounded-full border border-night-border px-2.5 py-0.5 text-[11px] hover:bg-night-surface">
+                        <Link href={`${contentPaths[link.type]}/${link.slug}`} className="border border-night-border px-3 py-1 text-xs hover:bg-night-surface">
                           {link.name}
                         </Link>
                       </li>
@@ -97,14 +122,14 @@ export function ReferenceGallery({ items, groups, emptyMessage = "Nenhuma imagem
                   </ul>
                 )}
               </div>
-              <div className="flex shrink-0 items-center gap-2 text-text">
+              <div className="flex shrink-0 items-center gap-2">
                 {isReference && shown.id !== null && (
                   <>
                     <FavoriteButton type="reference" slug={String(shown.id)} isFavorite={shown.is_favorite ?? false} className="size-9" />
                     <ActionMenu items={menuItems} />
                   </>
                 )}
-                <button type="button" onClick={() => dialogRef.current?.close()} className="rounded-md border border-night-border px-3 py-1.5 text-xs text-night-text hover:bg-night-surface">
+                <button type="button" onClick={() => dialogRef.current?.close()} className="rounded-sm border border-night-border px-4 py-2 text-xs text-night-text hover:bg-night-surface">
                   Fechar
                 </button>
               </div>

@@ -16,8 +16,8 @@ export default async function EditStrategyPage({ params }: PageProps<"/estrategi
 
   return (
     <>
-      <PageHeader title="Editar estratégia" subtitle={strategy.name} />
-      <div className="px-5 pb-12 sm:px-10">
+      <PageHeader eyebrow="Editar · Estratégia" title={strategy.name} />
+      <div className="pb-8">
         <StrategyForm strategy={strategy} tags={tags} styles={styles} />
       </div>
     </>

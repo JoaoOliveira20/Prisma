@@ -19,21 +19,23 @@ export function ContentFilters({ basePath, tags, activeTag, query, sort }: Conte
     return search ? `${basePath}?${search}` : basePath;
   };
 
-  const chip = (active: boolean) =>
-    `rounded-full border px-3 py-1 text-xs transition-colors ${
-      active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface-raised text-text-muted hover:text-text"
-    }`;
+  const linkClass = (active: boolean) =>
+    `underline-offset-[7px] transition-colors ${active ? "text-text underline decoration-2" : "text-text-muted hover:text-text hover:underline hover:decoration-1"}`;
 
   return (
-    <nav aria-label="Filtrar por tag" className="flex flex-wrap gap-2 px-5 pb-6 sm:px-10">
-      <Link href={hrefFor()} aria-current={!activeTag ? "true" : undefined} className={chip(!activeTag)}>
-        Todos
-      </Link>
-      {tags.map((tag) => (
-        <Link key={tag.slug} href={hrefFor(tag.slug)} aria-current={activeTag === tag.slug ? "true" : undefined} className={chip(activeTag === tag.slug)}>
-          {tag.name}
-        </Link>
-      ))}
+    <nav aria-label="Filtrar por tag">
+      <ul className="flex flex-wrap items-baseline gap-x-6 gap-y-2 text-sm">
+        <li>
+          <Link href={hrefFor()} aria-current={!activeTag ? "true" : undefined} className={linkClass(!activeTag)}>Todos</Link>
+        </li>
+        {tags.map((tag) => (
+          <li key={tag.slug}>
+            <Link href={hrefFor(tag.slug)} aria-current={activeTag === tag.slug ? "true" : undefined} className={linkClass(activeTag === tag.slug)}>
+              {tag.name}
+            </Link>
+          </li>
+        ))}
+      </ul>
     </nav>
   );
 }

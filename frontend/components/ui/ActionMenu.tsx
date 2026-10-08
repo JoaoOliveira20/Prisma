@@ -42,7 +42,7 @@ export function ActionMenu({ items, label = "Mais ações" }: { items: ActionMen
   }, [open]);
 
   const itemClass = (danger?: boolean) =>
-    `block w-full rounded px-3 py-2 text-left text-sm hover:bg-surface focus:bg-surface focus:outline-none ${danger ? "text-danger" : ""}`;
+    `block w-full rounded-sm px-3 py-2 text-left text-sm hover:bg-surface focus:bg-surface focus:outline-none ${danger ? "text-danger" : ""}`;
 
   return (
     <div ref={containerRef} className="relative">
@@ -53,7 +53,7 @@ export function ActionMenu({ items, label = "Mais ações" }: { items: ActionMen
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         onClick={() => setOpen((current) => !current)}
-        className="grid size-9 place-items-center rounded-full border border-border bg-surface-raised hover:bg-surface"
+        className="grid size-9 place-items-center rounded-full border border-border-strong bg-transparent hover:bg-current/10"
       >
         <svg viewBox="0 0 24 24" className="size-5" fill="currentColor" aria-hidden="true">
           <circle cx="5" cy="12" r="1.8" />
@@ -62,7 +62,7 @@ export function ActionMenu({ items, label = "Mais ações" }: { items: ActionMen
         </svg>
       </button>
       {open && (
-        <div id={menuId} role="menu" className="absolute right-0 z-20 mt-2 w-52 rounded-md border border-border bg-surface-raised p-1 text-text shadow-lg">
+        <div id={menuId} role="menu" className="absolute right-0 z-20 mt-2 w-52 rounded-sm border border-border-strong bg-surface-raised p-1 text-text shadow-lg">
           {items.map((item) =>
             item.href ? (
               <Link key={item.label} href={item.href} role="menuitem" className={itemClass(item.danger)} onClick={() => setOpen(false)}>

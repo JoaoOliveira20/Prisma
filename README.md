@@ -31,7 +31,7 @@ kool run artisan migrate --seed
 -   API: `http://localhost:8000/api` (porta definida por `KOOL_APP_PORT`).
 -   MySQL exposto em `localhost:3307` (`KOOL_DATABASE_PORT`).
 -   Testes: `kool run phpunit` (SQLite em memória, não afeta o MySQL).
--   `AUTH_RATE_LIMIT` (padrão 10) limita login/cadastro por minuto; para os testes E2E use um valor alto no `.env` (ver `docs/decisions/frontend/testing.md`).
+-   `AUTH_RATE_LIMIT` (padrão 10) limita login/cadastro por minuto e `API_RATE_LIMIT` (padrão 600) as demais rotas por usuário; para os testes E2E use valores altos no `.env` (ver `docs/decisions/frontend/testing.md`).
 -   Formatação: `kool run composer exec pint`.
 -   Parar: `kool stop`. Recriar dados: `kool run artisan migrate:fresh --seed`.
 -   Usuário de demonstração (apenas desenvolvimento): `demo@prisma.test` / `password`.

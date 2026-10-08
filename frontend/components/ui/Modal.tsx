@@ -29,13 +29,13 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
       aria-labelledby={titleId}
       onClose={onClose}
       onClick={(event) => event.target === dialogRef.current && onClose()}
-      className={`m-auto max-h-[90vh] w-[calc(100vw-2rem)] ${sizes[size]} overflow-y-auto rounded-xl border border-border bg-surface-raised p-0 text-text shadow-2xl backdrop:bg-night/60`}
+      className={`m-auto max-h-[90vh] w-[calc(100vw-2rem)] ${sizes[size]} overflow-y-auto rounded-sm border border-border bg-surface-raised p-0 text-text shadow-2xl backdrop:bg-night/60`}
     >
       {open && (
         <div className="p-6">
           <div className="mb-5 flex items-start justify-between gap-4">
             <h2 id={titleId} className="font-serif text-2xl">{title}</h2>
-            <button type="button" onClick={onClose} aria-label="Fechar" className="rounded-md p-1 text-text-muted hover:bg-surface hover:text-text">
+            <button type="button" onClick={onClose} aria-label="Fechar" className="rounded-sm p-1 text-text-muted hover:bg-surface hover:text-text">
               <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
                 <path d="M6 6l12 12M18 6L6 18" />
               </svg>

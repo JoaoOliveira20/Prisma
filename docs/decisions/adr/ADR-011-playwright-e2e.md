@@ -22,6 +22,10 @@ Os riscos mais prováveis (fluxo de login, formulários, persistência, permiss�
 -   Sem integração contínua: precisam ser rodados manualmente (`yarn e2e`).
 -   Dados de teste permanecem no banco local.
 
+## Acréscimo (2026-10-08)
+
+Passou a incluir **`@axe-core/playwright`** (dependência de desenvolvimento) para verificar acessibilidade WCAG AA automaticamente nas telas, sem mudar a decisão.
+
 ## Alternativas consideradas
 
 -   **Vitest + Testing Library:** não cobrem Server Actions e cookies de forma realista; descartada por ora. Não foi discutida com o responsável.

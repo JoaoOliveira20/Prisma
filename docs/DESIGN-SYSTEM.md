@@ -133,3 +133,7 @@ apenas por decoração.
 -   Evitar estilos duplicados e exceções locais sem justificativa.
 -   O design system é uma referência viva: atualizar este arquivo quando
     decisões visuais relevantes forem tomadas.
+
+## Decisões visuais implementadas
+
+A direção adotada ("arquivo editorial"), os tokens vigentes, a tipografia, os componentes e a verificação de acessibilidade estão em `decisions/frontend/design-system.md` e no `decisions/adr/ADR-013-editorial-archive-direction.md`. Os tokens concretos diferem da lista conceitual acima apenas por acréscimos (`border-strong`, `sidebar*`, `night*`).

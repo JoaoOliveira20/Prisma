@@ -10,8 +10,8 @@ export default async function NewStylePage() {
 
   return (
     <>
-      <PageHeader title="Novo estilo" subtitle="Comece com o essencial; o restante pode ser preenchido depois." />
-      <div className="px-5 pb-12 sm:px-10">
+      <PageHeader eyebrow="Novo registro · Estilo" title="Novo estilo" lede="Comece com o essencial. O restante pode ser escrito depois." />
+      <div className="pb-8">
         <StyleForm tags={tags} />
       </div>
     </>

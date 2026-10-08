@@ -1,26 +1,47 @@
 # Pesquisa global (Command Palette)
 
-**Situação:** implementada para estilos, pessoas, estratégias, referências, grupos e tags.
+**Situação:** implementada. Busca em estilos, pessoas, estratégias, referências, grupos e tags, mais **comandos** de navegação e de criação.
+
+## Origem do desenho
+
+O visual e o comportamento foram adaptados de um exemplo de paleta de comandos da documentação da biblioteca Motion (`motion.dev/examples/react-command-palette`). **A biblioteca não é usada**: o projeto não tem dependência de animação, então os efeitos foram refeitos com CSS e React. O exemplo pago não expõe estilos; a aparência segue os tokens do nosso design system.
+
+O que foi trazido do exemplo: gatilho com atalho, caixa de busca com ícone e botão de limpar, resultados agrupados com rótulo, ícone/miniatura por item, destaque da seleção que **desliza** entre os itens, rolagem automática até o item selecionado, navegação por setas **em ciclo**, rodapé com dicas de teclado e animação de entrada e saída.
 
 ## Funcionamento
 
--   Aberta por **Ctrl+K / Cmd+K** em qualquer tela autenticada ou pelo campo de busca do cabeçalho (`components/search/SearchTrigger.tsx`, que dispara o evento `prisma:open-search`).
--   `components/search/CommandPalette.tsx` (montado em `app/(app)/layout.tsx`) usa `<dialog>` modal. A cada digitação, com **debounce de 200 ms** e cancelamento da requisição anterior, chama `GET /api/search?q=` (Route Handler do Next, `app/api/search/route.ts`).
--   O Route Handler consulta `/styles`, `/people`, `/strategies`, `/references`, `/groups` e `/tags` da API em paralelo (`q`) e devolve até **5 itens por tipo**, agrupados com rótulo, já com `href`, nome, subtítulo e imagem. Destinos: estilos/pessoas/estratégias → página de detalhe; **referências** → `/referencias?q=<título>` (não há página por referência); **grupos** → `/grupos/<id>`; **tags** → `/explorar?tag=<slug>`.
--   Navegação por teclado: setas movem a seleção, Enter abre, Esc fecha; mouse também funciona.
--   Estados: vazio ("Digite para pesquisar"), carregando, sem resultados e erro.
+-   Aberta por **Ctrl+K / Cmd+K** em qualquer tela autenticada, pelo botão **Buscar** no topo da sidebar ou, abaixo de 1024 px, pelo ícone de busca da barra superior (`components/search/SearchTrigger.tsx`, que dispara o evento `prisma:open-search`).
+-   `components/search/CommandPalette.tsx` (montado em `app/(app)/layout.tsx`) usa `<dialog>` modal nativo (foco preso). `components/search/CommandResults.tsx` desenha a lista.
+-   **Sem texto digitado:** mostra os **comandos**, em dois grupos: **Ir para** (um por item da sidebar, vindo de `lib/navigation.ts`) e **Criar** (Novo estilo, Nova pessoa, Nova estratégia, Nova referência). Definidos em `lib/commands.ts` (opções estáticas deliberadas; não são dados de negócio).
+-   **Com texto:** os comandos são filtrados **na hora**, ignorando maiúsculas e acentos (`estrategia` encontra "Estratégias"), e a API é consultada com **debounce de 200 ms** e cancelamento da requisição anterior (`GET /api/search?q=`, Route Handler `app/api/search/route.ts`). Resultados da API vêm depois dos comandos, agrupados por tipo.
+-   O Route Handler consulta `/styles`, `/people`, `/strategies`, `/references`, `/groups` e `/tags` em paralelo e devolve até **5 itens por tipo**, com `href`, nome, subtítulo e imagem. Destinos: estilos/pessoas/estratégias → página de detalhe; **referências** → `/referencias?q=<título>`; **grupos** → `/grupos/<id>`; **tags** → `/explorar?tag=<slug>`. O comando **Nova referência** leva a `/referencias?nova=1`, que abre o modal de criação ao carregar.
+-   **Teclado:** `↑`/`↓` movem a seleção e dão a volta nas pontas; `Enter` abre o item selecionado; `Esc` fecha; a seleção volta ao primeiro item a cada texto novo. **Mouse:** passar o mouse seleciona, clicar abre; clicar fora fecha.
+-   **Item selecionado:** destaque deslizante (uma camada única, `data-palette-highlight`, movida por `transform` com transição de 180 ms, posicionada medindo o item) e uma dica `↵` no fim da linha.
+-   **Animações** (CSS em `app/globals.css`, classe `command-palette`): entrada de 160 ms (opacidade + leve subida e zoom) e saída de 120 ms; o fundo escurece com transição própria. Para a saída, o fechamento nativo é adiado até o fim da animação (`data-closing`, com um fallback de 250 ms). Reabrir durante a saída cancela o fechamento. `prefers-reduced-motion` reduz tudo a ~0 ms (regra global).
+-   **Estados:** carregando ("Buscando…" ao lado do campo), erro ("Não foi possível pesquisar agora."), sem resultados ("Nenhum resultado para “…”") e a lista de comandos quando vazio.
+-   **Acessibilidade:** `combobox` com `aria-controls`, `aria-activedescendant` e `aria-autocomplete`; lista `listbox` com grupos (`role="group"` e rótulo) e opções `aria-selected`; botão "Limpar busca" rotulado; o foco volta ao campo ao limpar. O anel de foco global é desativado só no campo da paleta (ele ficava cortado pela borda do diálogo); o cursor de texto e o destaque indicam o foco.
 
 ## Decisões
 
 -   **Route Handler em vez de chamada direta:** o token fica no cookie `httpOnly` e só o servidor do Next pode usá-lo ([ADR-003](../adr/ADR-003-frontend-backend-integration.md)).
--   A busca é o `LIKE` da API (nome e resumo); não há busca textual avançada nem tolerância a erros de digitação.
+-   **Sem biblioteca de animação:** CSS e medição de posição bastam para o destaque deslizante e para a entrada/saída; evita uma dependência (`CLAUDE.md`).
+-   **Lista só montada com o diálogo aberto:** o destaque depende de medir os itens, e um diálogo fechado tem altura zero. Foi um defeito real (primeira abertura sem destaque).
+-   **Comandos junto com resultados** na mesma lista navegável por teclado, em vez de modos separados.
+-   A busca é o `LIKE` da API; não há busca textual avançada nem tolerância a erros de digitação (só os comandos ignoram acentos).
 
 ## Limitações
 
 -   Seis chamadas à API por pesquisa (em paralelo).
 -   Tags levam só à listagem de estilos; referências abrem a biblioteca filtrada, não o item.
--   O padrão ARIA do combobox está simplificado (sem `aria-activedescendant`).
+-   Não há atalhos de teclado por comando (o exemplo original mostra atalhos; aqui só `↵`).
+-   O atalho aparece como "Ctrl K" mesmo no Mac (funciona com `Cmd+K`).
+-   A animação de reflow ao filtrar (itens deslizando) do exemplo original não foi reproduzida; a lista troca de conteúdo sem transição, só o destaque desliza.
+-   Os modais comuns (`ui/Modal`) ainda não têm animação de entrada/saída; só a paleta.
+
+## Testes
+
+`e2e/tags-search.spec.ts` (ver [testing.md](testing.md)): grupos por tipo, comandos sem busca, filtro por texto e acentos, ciclo das setas, `aria-activedescendant`, Enter, limpar, Esc, clique fora, reabertura, comando que abre o modal e posição do destaque.
 
 ## Referência visual
 
-Tela "09 busca global" do mockup (campo no topo, resultados por categoria). Apresentada aqui como diálogo flutuante, não como tela cheia.
+Tela "09 busca global" do mockup (campo no topo, resultados por categoria) e o exemplo de paleta da Motion. Apresentada aqui como diálogo flutuante, não como tela cheia.

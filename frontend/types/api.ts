@@ -30,6 +30,7 @@ export type Style = {
   cover_url: string | null;
   tags?: Tag[];
   references?: ReferenceItem[];
+  related?: Style[];
   people?: Person[];
   strategies?: Strategy[];
   has_uploaded_image: boolean;
@@ -83,6 +84,7 @@ export type Group = {
   id: number;
   name: string;
   is_favorites: boolean;
+  previews?: string[];
   items_count: number;
   can: { update: boolean; delete: boolean };
 };

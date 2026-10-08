@@ -24,14 +24,25 @@ class GroupController extends Controller
         $request->validate(['q' => ['nullable', 'string', 'max:120']]);
         $request->user()->favoritesGroup();
 
-        return GroupResource::collection(
-            $request->user()->groups()
-                ->withCount('items')
-                ->matching($request->q, ['name'])
-                ->orderByDesc('is_favorites')
-                ->orderBy('name')
-                ->get()
-        );
+        $groups = $request->user()->groups()
+            ->withCount('items')
+            ->matching($request->q, ['name'])
+            ->orderByDesc('is_favorites')
+            ->orderBy('name')
+            ->get();
+
+        $groups->each(fn (Group $group) => $group->setAttribute('previews', $group->items()
+            ->latest('id')
+            ->limit(12)
+            ->with('groupable')
+            ->get()
+            ->map->previewUrl()
+            ->filter()
+            ->take(4)
+            ->values()
+            ->all()));
+
+        return GroupResource::collection($groups);
     }
 
     public function show(Request $request, Group $group): JsonResponse

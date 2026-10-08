@@ -8,29 +8,29 @@ Formar uma **biblioteca visual** do sistema, não só uma imagem de capa (`../..
 
 ## Página `/referencias` (biblioteca)
 
-`app/(app)/referencias/page.tsx`. Mostra **todas as imagens do sistema**, de todos os usuários: referências **e** as capas de estilos e estratégias e as fotos de pessoas (consulta unificada `GET /images`). Em colunas ("masonry"), cada imagem tem **título e uma curta descrição** embaixo; imagens que não são referências mostram a origem ("Estilo", "Pessoa", "Estratégia").
+`app/(app)/referencias/page.tsx`. Mostra **todas as imagens do sistema**, de todos os usuários: referências **e** as capas de estilos e estratégias e as fotos de pessoas (consulta unificada `GET /images`). Em colunas ("masonry"), sem moldura, cada imagem tem legenda estilo museu (**título em serifa e uma curta descrição**); imagens que não são referências mostram a origem ("Estilo", "Pessoa", "Estratégia").
 
-Filtros (`components/references/ImageFilters.tsx`, tudo por URL, sem JavaScript): **origem** (Todas, Referências, Estilos, Pessoas, Estratégias), **busca** (título, descrição, crédito), **estilo** (mostra o que se relaciona àquele estilo: a capa dele, referências vinculadas e imagens de pessoas e estratégias ligadas a ele) e **"só o que eu criei"**. Paginação de 48 por página; página inexistente volta para a última.
+Filtros (`components/references/ImageFilters.tsx`, tudo por URL, sem JavaScript; origem como links de texto sublinhados, busca com borda inferior): **origem** (Todas, Referências, Estilos, Pessoas, Estratégias), **busca** (título, descrição, crédito), **estilo** (mostra o que se relaciona àquele estilo: a capa dele, referências vinculadas e imagens de pessoas e estratégias ligadas a ele) e **"só o que eu criei"**. Paginação de 48 por página; página inexistente volta para a última.
 
 Botão **Nova referência** (`NewReferenceButton`) abre o modal de criação.
 
 ## Modal de referência (`components/references/ReferenceModal.tsx`)
 
-Um só componente para **criar** e **editar**, aberto de três lugares (biblioteca, aba Referências de um conteúdo, menu da imagem):
+Um só componente para **criar** e **editar**, aberto de três lugares (biblioteca, seção Referências de um conteúdo, menu da imagem):
 
 -   Campos: título, descrição, crédito, fonte; na criação, **arquivo ou URL** da imagem. Na edição a imagem não muda.
 -   **Vínculos:** na biblioteca e na edição aparecem caixas para estilos, pessoas e estratégias (só os **seus**; a lista é carregada ao abrir o modal por `app/api/link-options/route.ts`). Aberto a partir de um conteúdo, o vínculo àquele conteúdo já vem fixo.
 -   Erros por campo e geral; **o digitado é preservado** (`components/ui/Form.tsx`). Ao salvar com sucesso o modal fecha e a página revalida.
 
-## Aba Referências de um conteúdo (`components/references/EntityReferences.tsx`)
+## Seção Referências de um conteúdo (`components/references/AddReferenceButton.tsx`)
 
-O dono do conteúdo vê o botão **Adicionar referência**, que abre o modal com duas abas: **Enviar nova imagem** e **Vincular imagem existente** (`LinkExistingPanel`): lista as referências do próprio usuário que ainda não estão vinculadas àquele conteúdo (carregadas por `app/api/my-references/route.ts`), com seleção múltipla. É assim que **uma mesma imagem passa a ilustrar mais de um estilo**. Vínculos individuais também podem ser removidos pela edição.
+Na página de detalhe, a dimensão **Referências** mostra o mosaico do conteúdo e, para o dono, o botão **Adicionar referência** no rótulo da seção, que abre o modal com duas abas: **Enviar nova imagem** e **Vincular imagem existente** (`LinkExistingPanel`): lista as referências do próprio usuário que ainda não estão vinculadas àquele conteúdo (carregadas por `app/api/my-references/route.ts`), com seleção múltipla. É assim que **uma mesma imagem passa a ilustrar mais de um estilo**. Vínculos individuais também podem ser removidos pela edição.
 
 ## Visualização (lightbox) — `ReferenceGallery.tsx`
 
-Clique abre um diálogo escuro com a imagem grande, título, descrição, crédito, "Ver fonte" (nova aba, `rel="noopener noreferrer"`) e os **conteúdos vinculados** como links. Para **referências**: coração de favorito e menu "⋯" (Salvar em grupo, Editar, Remover, conforme permissão). Para capas e fotos de outros tipos: link "Abrir estilo/pessoa/estratégia"; não há ações de edição aqui (editam-se na página do próprio conteúdo). Remover pede **confirmação em modal** (`ConfirmDialog`).
+Clique abre um diálogo escuro com a imagem grande e **navegação entre as imagens**: botões laterais ("Imagem anterior"/"Próxima imagem", visíveis no hover/foco), setas ← → do teclado (ciclo nas pontas) e o contador "3 de 15" no rótulo. Mostra também título, descrição, crédito, "Ver fonte" (nova aba, `rel="noopener noreferrer"`) e os **conteúdos vinculados** como links. Para **referências**: coração de favorito e menu "⋯" (Salvar em grupo, Editar, Remover, conforme permissão). Para capas e fotos de outros tipos: link "Abrir estilo/pessoa/estratégia"; não há ações de edição aqui (editam-se na página do próprio conteúdo). Remover pede **confirmação em modal** (`ConfirmDialog`).
 
-O mesmo componente é usado na biblioteca, nas abas de conteúdo, no grupo e no Explorar; ele recebe a lista de grupos por prop (carregue `getGroups()` ao usá-lo).
+O mesmo componente é usado na biblioteca, nas seções de conteúdo, na coleção e no Explorar; ele recebe a lista de grupos por prop (carregue `getGroups()` ao usá-lo).
 
 ## Fluxo de criação
 
@@ -48,7 +48,6 @@ O mesmo componente é usado na biblioteca, nas abas de conteúdo, no grupo e no 
 
 ## Limitações
 
--   O lightbox não tem navegação anterior/próxima.
 -   Imagem de referência não pode ser trocada depois de criada (remover e recriar).
 -   Falha de carregamento de imagem externa não tem fallback.
 -   A lista de vínculo carrega no máximo 100 conteúdos por tipo.

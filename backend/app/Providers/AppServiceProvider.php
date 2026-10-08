@@ -22,9 +22,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        RateLimiter::for('api', fn (Request $request) => Limit::perMinute(240)->by($request->user()?->id ?: $request->ip()));
+        RateLimiter::for('api', fn (Request $request) => Limit::perMinute(config('limits.api_per_minute'))->by($request->user()?->id ?: $request->ip()));
 
-        RateLimiter::for('auth', fn (Request $request) => Limit::perMinute((int) env('AUTH_RATE_LIMIT', 10))->by($request->ip()));
+        RateLimiter::for('auth', fn (Request $request) => Limit::perMinute(config('limits.auth_per_minute'))->by($request->ip()));
 
         Relation::enforceMorphMap([
             'style' => Style::class,

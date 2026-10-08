@@ -16,8 +16,8 @@ export default async function EditStylePage({ params }: PageProps<"/estilos/[slu
 
   return (
     <>
-      <PageHeader title="Editar estilo" subtitle={style.name} />
-      <div className="px-5 pb-12 sm:px-10">
+      <PageHeader eyebrow="Editar · Estilo" title={style.name} />
+      <div className="pb-8">
         <StyleForm style={style} tags={tags} />
       </div>
     </>

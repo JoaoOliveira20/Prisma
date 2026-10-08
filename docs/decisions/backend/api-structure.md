@@ -4,7 +4,7 @@
 
 ## Convenções
 
--   **Limites de requisição:** `login` e `register` por IP (`AUTH_RATE_LIMIT`, padrão 10/min; 429 com "Muitas tentativas…"); demais rotas 240/min por usuário. Atenção: o Next faz as chamadas, então **todos os visitantes compartilham o IP do servidor Next** no limite de login; antes de implantar, encaminhe o IP real do cliente e configure proxies confiáveis.
+-   **Limites de requisição** (`config/limits.php`): `login` e `register` por IP (`AUTH_RATE_LIMIT`, padrão 10/min; 429 com "Muitas tentativas…"); demais rotas por usuário (`API_RATE_LIMIT`, padrão 600/min, porque cada página do Next faz de 3 a 9 chamadas à API). Atenção: o Next faz as chamadas, então **todos os visitantes compartilham o IP do servidor Next** no limite de login; antes de implantar, encaminhe o IP real do cliente e configure proxies confiáveis.
 -   JSON em tudo. Erros de validação: 422 `{ message, errors: { campo: [..] } }`. Não autenticado: 401. Sem permissão: 403. Inexistente: 404. Exclusão: 204.
 -   Itens e listas vêm sob `data`. Listas paginadas (`paginate`) devolvem também `meta` (`current_page`, `last_page`, `total`…) e `links`: estilos, pessoas e estratégias em 24 por página; referências em 60. `?page=` escolhe a página e `?per_page=` (1 a 100) muda o tamanho; o frontend usa `per_page=100` nos seletores de vínculo (limite: acima de 100 itens esses seletores deixam de mostrar todos).
 -   Estilos, pessoas e estratégias são endereçados por **slug** (único, gerado a partir do nome por `HasUniqueSlug`, com sufixo `-2`, `-3`… em colisões; o slug não muda quando o nome é editado). Grupos e referências por **id**.
@@ -33,7 +33,7 @@ Todos exigem autenticação, exceto os dois primeiros.
 
 Detalhes por recurso:
 
--   **Estilo:** `name` obrigatório; `summary`, `history`, `influences`, `characteristics[]`, `period`, `origin`, `cover_url`, `tags[]` (slugs existentes), `image` (arquivo), `remove_image`. `show` inclui tags, referências, pessoas e estratégias relacionadas, `is_favorite` e `group_ids` do usuário.
+-   **Estilo:** `name` obrigatório; `summary`, `history`, `influences`, `characteristics[]`, `period`, `origin`, `cover_url`, `tags[]` (slugs existentes), `image` (arquivo), `remove_image`. `show` inclui tags, referências (com estado do usuário), pessoas e estratégias relacionadas, **`related`** (até 4 outros estilos que compartilham tags, ordenados pelo número de tags em comum) , `is_favorite` e `group_ids` do usuário.
 -   **Pessoa:** `name`, `role`, `summary`, `biography`, `period`, `origin`, `photo_url`, `tags[]`, `styles[]` (slugs), imagem como acima.
 -   **Estratégia:** `name`, `category`, `summary`, `description`, `cover_url`, `tags[]`, `styles[]`, imagem como acima.
 -   **Referência:** criação exige `title` e (`image` arquivo **ou** `image_url`); `source_url`, `credit`, `description`, `links[]` (`{type, slug}`). Na edição a imagem não muda; `title`, `source_url`, `credit`, `description` e `links` sim (os vínculos são **substituídos**).

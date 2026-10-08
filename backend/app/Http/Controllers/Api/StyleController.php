@@ -7,6 +7,8 @@ use App\Http\Requests\StoreStyleRequest;
 use App\Http\Resources\StyleResource;
 use App\Models\Style;
 use App\Models\Tag;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -49,6 +51,8 @@ class StyleController extends Controller
             ->loadFavoriteFlag($request->user())
             ->loadGroupIds($request->user());
 
+        $style->setRelation('related', $this->relatedStyles($style, $user));
+
         return new StyleResource($style);
     }
 
@@ -86,5 +90,25 @@ class StyleController extends Controller
         if ($request->has('tags')) {
             $style->tags()->sync(Tag::whereIn('slug', $request->validated('tags') ?? [])->pluck('id'));
         }
+    }
+
+    private function relatedStyles(Style $style, User $user): Collection
+    {
+        $tagIds = $style->tags->pluck('id');
+
+        if ($tagIds->isEmpty()) {
+            return new Collection;
+        }
+
+        return Style::query()
+            ->whereKeyNot($style->id)
+            ->withCount(['tags as shared_tags_count' => fn ($query) => $query->whereIn('tags.id', $tagIds)])
+            ->whereHas('tags', fn ($query) => $query->whereIn('tags.id', $tagIds))
+            ->with('tags')
+            ->withFavoriteFlag($user)
+            ->orderByDesc('shared_tags_count')
+            ->orderBy('name')
+            ->limit(4)
+            ->get();
     }
 }

@@ -16,8 +16,8 @@ export default async function EditPersonPage({ params }: PageProps<"/pessoas/[sl
 
   return (
     <>
-      <PageHeader title="Editar pessoa" subtitle={person.name} />
-      <div className="px-5 pb-12 sm:px-10">
+      <PageHeader eyebrow="Editar · Pessoa" title={person.name} />
+      <div className="pb-8">
         <PersonForm person={person} tags={tags} styles={styles} />
       </div>
     </>

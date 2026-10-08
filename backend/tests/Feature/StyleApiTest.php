@@ -138,4 +138,33 @@ class StyleApiTest extends TestCase
         $this->deleteJson("/api/people/{$slug}")->assertNoContent();
         $this->assertEmpty(Storage::disk('public')->allFiles());
     }
+
+    public function test_style_detail_lists_related_styles_by_shared_tags(): void
+    {
+        $design = Tag::create(['name' => 'Design']);
+        $arte = Tag::create(['name' => 'Arte']);
+        $cor = Tag::create(['name' => 'Cor']);
+        $main = Style::factory()->create(['name' => 'Principal']);
+        $main->tags()->attach([$design->id, $arte->id]);
+        $both = Style::factory()->create(['name' => 'Dois em comum']);
+        $both->tags()->attach([$design->id, $arte->id]);
+        $one = Style::factory()->create(['name' => 'Um em comum']);
+        $one->tags()->attach([$design->id]);
+        $none = Style::factory()->create(['name' => 'Sem relação']);
+        $none->tags()->attach([$cor->id]);
+        Sanctum::actingAs(User::factory()->create());
+
+        $response = $this->getJson("/api/styles/{$main->slug}")->assertOk();
+
+        $this->assertSame(['Dois em comum', 'Um em comum'], collect($response->json('data.related'))->pluck('name')->all());
+    }
+
+    public function test_style_without_tags_has_no_related_styles(): void
+    {
+        $style = Style::factory()->create();
+        Style::factory()->create();
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->getJson("/api/styles/{$style->slug}")->assertJsonCount(0, 'data.related');
+    }
 }

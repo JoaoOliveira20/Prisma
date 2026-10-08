@@ -1,38 +1,45 @@
 import { PageHeader } from "@/components/layout/PageHeader";
 import { LinkButton } from "@/components/ui/Button";
-import { personToCard, styleToCard, strategyToCard, contentPaths } from "@/lib/content";
-import { redirectIfBeyondLastPage } from "@/lib/pagination";
-import { getPeoplePage, getStrategiesPage, getStylesPage, getTags } from "@/lib/data";
-import type { ContentType } from "@/types/api";
 import { Pagination } from "@/components/ui/Pagination";
-import { ListSearch } from "./ListSearch";
+import { contentPaths, personToCard, strategyToCard, styleToCard } from "@/lib/content";
+import { getPeoplePage, getStrategiesPage, getStylesPage, getTags } from "@/lib/data";
+import { redirectIfBeyondLastPage } from "@/lib/pagination";
+import type { ContentType } from "@/types/api";
 import { ContentFilters } from "./ContentFilters";
-import { ContentGrid } from "./ContentGrid";
+import { ContentGrid, type GridLayout } from "./ContentGrid";
+import { ListSearch } from "./ListSearch";
+import { StrategyList } from "./StrategyList";
 
-const labels: Record<ContentType, { title: string; subtitle: string; create: string; empty: string; first: string; search: string }> = {
+const labels: Record<ContentType, { eyebrow: string; title: string; lede: string; create: string; empty: string; first: string; search: string; layout: GridLayout | "list" }> = {
   style: {
+    eyebrow: "Dimensão · Estéticas",
     title: "Estilos",
-    subtitle: "Estéticas, movimentos e linguagens visuais.",
+    lede: "Movimentos, estéticas e linguagens visuais, cada um com sua história, suas pessoas e suas imagens.",
     create: "Novo estilo",
     empty: "Ainda não há estilos cadastrados.",
     first: "Criar o primeiro estilo",
     search: "Buscar por nome, período ou origem",
+    layout: "rhythm",
   },
   person: {
+    eyebrow: "Dimensão · Autores",
     title: "Pessoas",
-    subtitle: "Designers, artistas e pensadores que moldaram a história visual.",
+    lede: "Designers, artistas e pensadores que moldaram a história visual.",
     create: "Nova pessoa",
     empty: "Ainda não há pessoas cadastradas.",
     first: "Cadastrar a primeira pessoa",
     search: "Buscar por nome, atuação ou origem",
+    layout: "portraits",
   },
   strategy: {
+    eyebrow: "Dimensão · Conceitos",
     title: "Estratégias",
-    subtitle: "Princípios, práticas e metodologias de criação.",
+    lede: "Princípios, práticas e metodologias: as ideias por trás das formas.",
     create: "Nova estratégia",
     empty: "Ainda não há estratégias cadastradas.",
     first: "Criar a primeira estratégia",
     search: "Buscar por nome ou categoria",
+    layout: "list",
   },
 };
 
@@ -63,22 +70,23 @@ export async function ContentBrowser({ type, searchParams }: ContentBrowserProps
   redirectIfBeyondLastPage(meta, path, sortParams);
   const isFiltered = Boolean(tag || q);
   const label = labels[type];
+  const emptyMessage = isFiltered ? "Nada encontrado com esses filtros." : label.empty;
+  const emptyAction = !isFiltered && <LinkButton href={`${path}/novo`}>{label.first}</LinkButton>;
 
   return (
     <>
-      <PageHeader
-        title={label.title}
-        subtitle={label.subtitle}
-        actions={<LinkButton href={`${path}/novo`} className="shrink-0">{label.create}</LinkButton>}
-      />
-      <ListSearch basePath={path} query={q} tag={tag} sort={sort} placeholder={label.search} />
-      <ContentFilters basePath={path} tags={tags} activeTag={tag} query={q} sort={sort} />
-      <div className="px-5 pb-12 sm:px-10">
-        <ContentGrid
-          items={items}
-          emptyMessage={isFiltered ? "Nada encontrado com esses filtros." : label.empty}
-          emptyAction={!isFiltered && <LinkButton href={`${path}/novo`}>{label.first}</LinkButton>}
-        />
+      <PageHeader eyebrow={label.eyebrow} title={label.title} lede={label.lede} actions={<LinkButton href={`${path}/novo`} variant="secondary">{label.create}</LinkButton>} />
+      <div className="page-x space-y-5 border-y border-border py-5">
+        <ListSearch basePath={path} query={q} tag={tag} sort={sort} placeholder={label.search} />
+        <ContentFilters basePath={path} tags={tags} activeTag={tag} query={q} sort={sort} />
+      </div>
+      <div className="page-x pt-12">
+        <p className="eyebrow tabular mb-8">{meta.total} {meta.total === 1 ? "registro" : "registros"}</p>
+        {label.layout === "list" ? (
+          <StrategyList items={items} emptyMessage={emptyMessage} emptyAction={emptyAction} />
+        ) : (
+          <ContentGrid items={items} layout={label.layout} headingLevel={2} emptyMessage={emptyMessage} emptyAction={emptyAction} />
+        )}
         <Pagination meta={meta} basePath={path} params={sortParams} />
       </div>
     </>

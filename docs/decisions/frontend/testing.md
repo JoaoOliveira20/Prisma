@@ -8,18 +8,19 @@ Testes **ponta a ponta** com Playwright em `frontend/e2e/`, executados contra a 
 
 | Arquivo | Cobre |
 | --- | --- |
-| `auth.spec.ts` | rota protegida, erro de login em português (campo preservado), validação de cadastro, e-mail duplicado, sessão persistente e logout, `/login` quando já logado, cookie inválido sem laço de redirecionamento, cabeçalhos de segurança |
-| `content.spec.ts` | criar, favoritar, salvar em grupo (menu "⋯" e modal), editar e excluir estilo (modal de confirmação, inclusive cancelar); conteúdo de outro usuário sem Editar/Excluir; vínculos pessoa/estratégia ↔ estilo; busca e filtro por tag; erro de validação **preserva o digitado**; coração em itens relacionados e no lightbox; paginação (página 2 e redirecionamento para a última) |
-| `tags-search.spec.ts` | tags (criar, duplicar, renomear, somente leitura, em uso não exclui, exclusão), pesquisa global (grupos por tipo, teclado, vazio, `%` literal) |
-| `references.spec.ts` | modais de referência (criar com upload e vínculo, editar, favoritar, salvar em grupo, remover com confirmação); imagem obrigatória e arquivo inválido com o digitado preservado; vincular a mesma imagem a dois estilos; filtros da biblioteca (origem, estilo, só o que criei); lightbox de capa leva ao conteúdo; capa enviada e removida |
+| `auth.spec.ts` | rota protegida, erro de login em português (campo preservado), validação de cadastro, e-mail duplicado, sessão persistente e logout, `/login` quando já logado, cookie inválido sem laço de redirecionamento, cabeçalhos de segurança; tela de login (título, mostrar senha, alternância pelo rodapé, itens indisponíveis, anel e ordem de foco, movimento reduzido) |
+| `content.spec.ts` | criar, favoritar, salvar em grupo (menu "⋯" e modal), editar e excluir estilo (modal de confirmação, inclusive cancelar); conteúdo de outro usuário sem Editar/Excluir; início com dimensões e destaque; sidebar em grupos com item ativo e Favoritos; detalhe como página contínua com índice âncora e estilos relacionados; ciclo de vida de coleção (criar, renomear, excluir) e mosaico de coleção; pré-visualização de imagem no formulário; vínculos pessoa/estratégia ↔ estilo; busca e filtro por tag; erro de validação **preserva o digitado**; coração em itens relacionados e no lightbox; paginação (página 2 e redirecionamento para a última) |
+| `tags-search.spec.ts` | tags (criar, duplicar, renomear inline, cancelar, nome repetido, somente leitura, em uso não exclui, exclusão com confirmação), pesquisa global/paleta (grupos por tipo, comandos, filtro sem acento, ciclo de setas e ARIA, Enter, limpar, Esc, clique fora, reabrir, posição do destaque, `%` literal) |
+| `references.spec.ts` | modais de referência (criar com upload e vínculo, editar, favoritar, salvar em grupo, remover com confirmação); imagem obrigatória e arquivo inválido com o digitado preservado; vincular a mesma imagem a dois estilos; filtros da biblioteca (origem, estilo, só o que criei); lightbox de capa leva ao conteúdo; capa enviada e removida; navegação do lightbox por botões e setas |
 | `explore.spec.ts` | Explorar em seções por tipo (diferente de Estilos), busca e filtro por tag |
-| `responsive.spec.ts` | menu mobile (abrir, navegar, `Esc`), ausência de rolagem horizontal em 390 px |
+| `accessibility.spec.ts` | verificação automática **axe** (WCAG 2.0/2.1 A e AA) em todas as telas autenticadas, no login e nas camadas abertas (paleta, modal, lightbox): sem violações |
+| `responsive.spec.ts` | menu mobile (abrir, navegar, `Esc`), ausência de rolagem horizontal em 390 px em **14 rotas**, nomes longos sem espaços, busca pelo menu mobile, tablet (820 px) com barra superior e conteúdo em largura total, e login em mobile e tablet (botão ≥ 44 px) |
 
 Helpers em `e2e/helpers.ts` (`register`, `loginAsDemo`, `createApiSession`); imagem de teste em `e2e/fixtures/pixel.png`. Cada teste cria seu próprio usuário (`register`) e dados com nomes únicos; os dados de teste **não são removidos** (rode `migrate:fresh --seed` para limpar).
 
 ## Como executar
 
-1.  Backend no ar (`kool start`) e `AUTH_RATE_LIMIT` alto no `backend/.env` (ex.: `AUTH_RATE_LIMIT=1000`), porque os testes fazem dezenas de logins/cadastros do mesmo IP e o limite padrão é 10 por minuto. Depois de mudar o `.env`: `kool run artisan config:clear`.
+1.  Backend no ar (`kool start`) e limites altos no `backend/.env`: `AUTH_RATE_LIMIT=1000` e `API_RATE_LIMIT=20000`. Os testes fazem dezenas de logins/cadastros do mesmo IP (limite padrão 10 por minuto) e dezenas de páginas com o mesmo usuário demo (limite padrão da API 600 por minuto). Depois de mudar o `.env`: `kool run artisan config:clear`.
 2.  Banco com os dados de demonstração: `kool run artisan migrate:fresh --seed`.
 3.  Frontend no ar: `yarn dev` (porta 3000).
 4.  Primeira vez: `yarn playwright install chromium`.

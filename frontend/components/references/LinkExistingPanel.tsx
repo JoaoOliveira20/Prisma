@@ -40,7 +40,7 @@ export function LinkExistingPanel({ type, slug, onDone }: LinkExistingPanelProps
   if (failed) return <p role="alert" className="text-sm text-danger">Não foi possível carregar suas referências.</p>;
   if (!items) return <p className="text-sm text-text-muted">Carregando suas referências…</p>;
   if (items.length === 0) {
-    return <p className="rounded-md border border-dashed border-border px-4 py-8 text-center text-sm text-text-muted">Você não tem outras referências para vincular a este conteúdo.</p>;
+    return <p className="rounded-sm border border-dashed border-border px-4 py-8 text-center text-sm text-text-muted">Você não tem outras referências para vincular a este conteúdo.</p>;
   }
 
   return (
@@ -50,7 +50,7 @@ export function LinkExistingPanel({ type, slug, onDone }: LinkExistingPanelProps
         {items.map((item) => (
           <li key={item.key}>
             <label className="block cursor-pointer space-y-1">
-              <span className="relative block overflow-hidden rounded-md border border-border">
+              <span className="relative block overflow-hidden rounded-sm border border-border">
                 <Image src={item.image_url} alt="" width={300} height={200} unoptimized className="h-24 w-full object-cover" />
                 <input type="checkbox" checked={selected.includes(item.id!)} onChange={() => toggle(item.id!)} aria-label={`Vincular ${item.title}`} className="absolute left-2 top-2" />
               </span>

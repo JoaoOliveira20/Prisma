@@ -48,8 +48,8 @@ function ReferenceForm({ item, fixedLink, onDone }: { item?: GalleryItem; fixedL
       {!item && (
         <>
           <label className="block space-y-1.5">
-            <span className="text-xs font-medium text-text-muted">Imagem (arquivo, até 5 MB)</span>
-            <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif" className="block w-full text-sm file:mr-3 file:rounded-md file:border file:border-border file:bg-surface file:px-3 file:py-1.5 file:text-sm" />
+            <span className="block text-sm font-medium">Imagem (arquivo, até 5 MB)</span>
+            <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif" className="block w-full text-sm file:mr-3 file:rounded-sm file:border file:border-border file:bg-surface file:px-3 file:py-1.5 file:text-sm" />
             {error("image") && <span className="block text-xs text-danger" role="alert">{error("image")}</span>}
           </label>
           <TextField label="ou URL da imagem" name="image_url" type="url" placeholder="https://" error={error("image_url")} />

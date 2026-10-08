@@ -10,8 +10,8 @@ export default async function NewPersonPage() {
 
   return (
     <>
-      <PageHeader title="Nova pessoa" subtitle="Comece com o essencial; o restante pode ser preenchido depois." />
-      <div className="px-5 pb-12 sm:px-10">
+      <PageHeader eyebrow="Novo registro · Pessoa" title="Nova pessoa" lede="Comece com o essencial. O restante pode ser escrito depois." />
+      <div className="pb-8">
         <PersonForm tags={tags} styles={styles} />
       </div>
     </>

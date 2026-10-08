@@ -22,6 +22,7 @@ class StyleResource extends JsonResource
             'has_uploaded_image' => $this->image_path !== null,
             'tags' => TagResource::collection($this->whenLoaded('tags')),
             'references' => ReferenceItemResource::collection($this->whenLoaded('references')),
+            'related' => StyleResource::collection($this->whenLoaded('related')),
             'people' => PersonResource::collection($this->whenLoaded('people')),
             'strategies' => StrategyResource::collection($this->whenLoaded('strategies')),
             'is_favorite' => (bool) ($this->is_favorite ?? false),

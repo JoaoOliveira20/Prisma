@@ -20,6 +20,7 @@ Um ADR registra uma decisão de **arquitetura, segurança, infraestrutura ou per
 | [010](ADR-010-owned-controlled-tags.md) | Tags controladas com dono | Aceita |
 | [011](ADR-011-playwright-e2e.md) | Testes ponta a ponta do frontend com Playwright | Aceita |
 | [012](ADR-012-unified-image-library.md) | Biblioteca de imagens como consulta unificada | Aceita |
+| [013](ADR-013-editorial-archive-direction.md) | Direção visual "arquivo editorial" | Aceita (substitui visualmente o desenho de catálogo inicial) |
 
 ## Modelo
 

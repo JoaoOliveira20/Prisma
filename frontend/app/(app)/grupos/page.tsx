@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { CreateGroupForm } from "@/components/groups/CreateGroupForm";
+import { CollectionCover } from "@/components/groups/CollectionCover";
+import { CreateGroupButton } from "@/components/groups/CreateGroupButton";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { getGroups } from "@/lib/data";
 
@@ -11,22 +11,20 @@ export default async function GroupsPage() {
 
   return (
     <>
-      <PageHeader title="Grupos" subtitle="Suas coleções pessoais. Os favoritos ficam no grupo Favoritos." />
-      <div className="space-y-8 px-5 pb-12 sm:px-10">
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <PageHeader
+        eyebrow="Coleções"
+        title="Grupos"
+        lede="Seus conjuntos pessoais de estilos, pessoas, ideias e imagens. Os favoritos moram na primeira coleção."
+        actions={<CreateGroupButton />}
+      />
+      <div className="page-x border-t border-border pt-12">
+        <ul className="grid grid-cols-1 gap-x-10 gap-y-16 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {groups.map((group) => (
             <li key={group.id}>
-              <Link href={`/grupos/${group.id}`} className="block rounded-lg border border-border bg-surface-raised p-5 transition-colors hover:bg-surface">
-                <h2 className="font-serif text-xl">{group.name}</h2>
-                <p className="mt-1 text-xs text-text-muted">
-                  {group.items_count} {group.items_count === 1 ? "item" : "itens"}
-                  {group.is_favorites && " · grupo padrão"}
-                </p>
-              </Link>
+              <CollectionCover group={group} href={group.is_favorites ? "/favoritos" : `/grupos/${group.id}`} />
             </li>
           ))}
         </ul>
-        <CreateGroupForm />
       </div>
     </>
   );
