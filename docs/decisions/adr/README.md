@@ -20,7 +20,11 @@ Um ADR registra uma decisão de **arquitetura, segurança, infraestrutura ou per
 | [010](ADR-010-owned-controlled-tags.md) | Tags controladas com dono | Aceita |
 | [011](ADR-011-playwright-e2e.md) | Testes ponta a ponta do frontend com Playwright | Aceita |
 | [012](ADR-012-unified-image-library.md) | Biblioteca de imagens como consulta unificada | Aceita |
-| [013](ADR-013-editorial-archive-direction.md) | Direção visual "arquivo editorial" | Aceita (substitui visualmente o desenho de catálogo inicial) |
+| [013](ADR-013-editorial-archive-direction.md) | Direção visual "arquivo editorial" | Aceita (substitui visualmente o desenho de catálogo inicial; detalhes parcialmente revistos pelo 014) |
+| [014](ADR-014-dimension-portals.md) | Dimensões como conteúdo, portais ou relações | Aceita (substitui parcialmente o 013) |
+| [015](ADR-015-reference-tags-and-explicit-links.md) | Vínculo explícito imagem↔conteúdo e tags próprias nas imagens | Aceita |
+| [016](ADR-016-reference-library-as-visual-archive.md) | Biblioteca de referências como arquivo visual | Aceita |
+| [017](ADR-017-sidebar-as-archive-index.md) | Sidebar como índice do arquivo | Aceita |
 
 ## Modelo
 

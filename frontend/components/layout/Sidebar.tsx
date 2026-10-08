@@ -2,115 +2,142 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { logout } from "@/app/actions/auth";
+import { useEffect, useRef, useState } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { MobileSearchButton, SidebarSearchTrigger } from "@/components/search/SearchTrigger";
 import { navigationGroups } from "@/lib/navigation";
 import type { User } from "@/types/api";
 import { NavIcon } from "./NavIcon";
+import { SidebarAccount } from "./SidebarAccount";
+import { SidebarItem, type RailTip } from "./SidebarItem";
 
-export function Sidebar({ user }: { user: User }) {
+const COLLAPSED_COOKIE = "prisma_sidebar";
+
+type SidebarProps = {
+  user: User;
+  initialCollapsed: boolean;
+};
+
+export function Sidebar({ user, initialCollapsed }: SidebarProps) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [tip, setTip] = useState<RailTip | null>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!mobileOpen) return;
-    const closeOnEscape = (event: KeyboardEvent) => event.key === "Escape" && setMobileOpen(false);
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setMobileOpen(false);
+      menuButtonRef.current?.focus();
+    };
+    const content = document.getElementById("conteudo");
+    content?.setAttribute("inert", "");
+    document.documentElement.style.overflow = "hidden";
+    const focusTimer = setTimeout(() => drawerRef.current?.querySelector<HTMLElement>("nav a")?.focus(), 60);
     window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
+    return () => {
+      clearTimeout(focusTimer);
+      content?.removeAttribute("inert");
+      document.documentElement.style.overflow = "";
+      window.removeEventListener("keydown", closeOnEscape);
+    };
   }, [mobileOpen]);
 
-  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+  const toggleCollapsed = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    setTip(null);
+    document.cookie = `${COLLAPSED_COOKIE}=${next ? "collapsed" : "expanded"}; path=/; max-age=31536000; samesite=lax`;
+  };
+
+  const stateOf = (href: string) => {
+    if (href === "/") return pathname === "/" ? "current" : null;
+    if (pathname === href) return "current";
+    return pathname.startsWith(`${href}/`) ? "ancestor" : null;
+  };
 
   return (
     <>
       <header className="night-scope sticky top-0 z-30 flex items-center justify-between bg-sidebar px-4 py-2 text-sidebar-text lg:hidden">
-        <Logo />
+        <Link href="/" aria-label="PRISMA, início" className="rounded-sm">
+          <Logo />
+        </Link>
         <div className="flex items-center gap-1">
           <MobileSearchButton />
           <button
+            ref={menuButtonRef}
             type="button"
-            aria-label="Abrir menu"
+            aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"}
             aria-expanded={mobileOpen}
+            aria-controls="sidebar"
             onClick={() => setMobileOpen((open) => !open)}
-            className="grid size-10 place-items-center rounded-sm hover:bg-sidebar-raised"
+            className="grid size-11 place-items-center rounded-sm transition-colors duration-200 hover:bg-sidebar-raised"
           >
             <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
-              <path d="M4 8h16M4 16h16" />
+              <path d="M4 8h16" className={`origin-center transition-transform duration-300 ease-[var(--ease-out)] ${mobileOpen ? "translate-y-1 rotate-45" : ""}`} style={{ transformBox: "fill-box" }} />
+              <path d="M4 16h16" className={`origin-center transition-transform duration-300 ease-[var(--ease-out)] ${mobileOpen ? "-translate-y-1 -rotate-45" : ""}`} style={{ transformBox: "fill-box" }} />
             </svg>
           </button>
         </div>
       </header>
 
       <aside
-        className={`night-scope ${mobileOpen ? "flex" : "hidden"} fixed inset-x-0 top-[3.5rem] bottom-0 z-20 flex-col overflow-y-auto bg-sidebar text-sidebar-text lg:sticky lg:top-0 lg:flex lg:h-screen lg:shrink-0 lg:border-r lg:border-sidebar-border ${
-          collapsed ? "lg:w-[4.5rem]" : "lg:w-64"
-        }`}
+        id="sidebar"
+        ref={drawerRef}
+        className={`night-scope fixed inset-x-0 bottom-0 top-[3.5rem] z-20 flex flex-col overflow-y-auto bg-sidebar text-sidebar-text transition-[opacity,translate,visibility] duration-300 ease-[var(--ease-out)] lg:visible lg:sticky lg:top-0 lg:h-screen lg:shrink-0 lg:translate-y-0 lg:overflow-x-hidden lg:border-r lg:border-sidebar-border lg:opacity-100 lg:transition-[width] ${
+          mobileOpen ? "visible translate-y-0 opacity-100" : "invisible -translate-y-2 opacity-0"
+        } ${collapsed ? "lg:w-[4.5rem]" : "lg:w-64"}`}
       >
-        <div className={`hidden items-center px-6 pb-8 pt-8 lg:flex ${collapsed ? "justify-center px-0" : "justify-between"}`}>
-          <Logo showWordmark={!collapsed} />
-          {!collapsed && (
-            <button type="button" aria-label="Minimizar menu" onClick={() => setCollapsed(true)} className="rounded-sm p-1 text-sidebar-muted hover:text-sidebar-text">
-              «
-            </button>
-          )}
-        </div>
-        {collapsed && (
-          <button type="button" aria-label="Expandir menu" onClick={() => setCollapsed(false)} className="mx-auto mb-4 hidden rounded-sm p-1 text-sidebar-muted hover:text-sidebar-text lg:block">
-            »
+        <div className={`hidden shrink-0 items-center px-6 pb-6 pt-7 transition-[padding] duration-300 lg:flex ${collapsed ? "lg:flex-col lg:gap-3 lg:px-0" : "justify-between"}`}>
+          <Link href="/" aria-label="PRISMA, início" className="rounded-sm">
+            <Logo showWordmark={!collapsed} />
+          </Link>
+          <button
+            type="button"
+            aria-label={collapsed ? "Expandir menu" : "Minimizar menu"}
+            aria-expanded={!collapsed}
+            aria-controls="sidebar"
+            onClick={toggleCollapsed}
+            className="grid size-8 place-items-center rounded-sm text-sidebar-muted transition-colors duration-200 hover:bg-sidebar-raised/70 hover:text-sidebar-text"
+          >
+            <span className={`transition-transform duration-300 ease-[var(--ease-out)] ${collapsed ? "rotate-180" : ""}`}>
+              <NavIcon name="chevron" />
+            </span>
           </button>
-        )}
-
-        <div className={`px-4 pt-4 lg:pt-0 ${collapsed ? "lg:px-3" : "lg:px-6"}`}>
-          <SidebarSearchTrigger collapsed={collapsed} />
         </div>
 
-        <nav aria-label="Principal" className={`mt-8 flex-1 space-y-7 px-4 pb-6 ${collapsed ? "lg:px-3" : "lg:px-6"}`}>
-          {navigationGroups.map((group) => (
-            <div key={group.label}>
-              <p className={`eyebrow mb-2 !text-sidebar-muted ${collapsed ? "lg:sr-only" : ""}`}>{group.label}</p>
+        <div className={`px-4 pt-4 transition-[padding] duration-300 lg:px-6 lg:pt-0 ${collapsed ? "lg:px-3" : ""}`}>
+          <SidebarSearchTrigger collapsed={collapsed} onTip={setTip} />
+        </div>
+
+        <nav aria-label="Principal" className={`mt-7 flex-1 px-4 pb-6 transition-[padding] duration-300 lg:px-6 ${collapsed ? "lg:px-3" : ""}`}>
+          {navigationGroups.map((group, index) => (
+            <div key={group.label ?? "entrada"} className={`${index > 0 ? "mt-7" : ""} ${collapsed && index > 0 ? "lg:border-t lg:border-sidebar-border lg:pt-5" : "border-t border-transparent"} transition-[border-color,padding] duration-300`}>
+              {group.label && (
+                <p className={`eyebrow mb-2 h-4 overflow-hidden whitespace-nowrap !text-sidebar-muted transition-[opacity,height,margin] duration-300 ${collapsed ? "lg:mb-0 lg:h-0 lg:opacity-0" : ""}`}>{group.label}</p>
+              )}
               <ul>
-                {group.items.map((item) => {
-                  const active = isActive(item.href);
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        onClick={() => setMobileOpen(false)}
-                        aria-current={active ? "page" : undefined}
-                        title={collapsed ? item.label : undefined}
-                        className={`relative flex h-10 items-center gap-3 text-sm transition-colors ${collapsed ? "lg:justify-center" : ""} ${
-                          active ? "text-sidebar-text" : "text-sidebar-muted hover:text-sidebar-text"
-                        }`}
-                      >
-                        {active && <span aria-hidden="true" className="absolute -left-3 top-1/2 h-5 w-0.5 -translate-y-1/2 bg-gradient-to-b from-[#6b7bd6] via-[#79c29a] to-[#cf5a3f]" />}
-                        <NavIcon name={item.icon} />
-                        <span className={collapsed ? "lg:sr-only" : ""}>{item.label}</span>
-                      </Link>
-                    </li>
-                  );
-                })}
+                {group.items.map((item) => (
+                  <li key={item.href}>
+                    <SidebarItem item={item} state={stateOf(item.href)} collapsed={collapsed} onNavigate={() => setMobileOpen(false)} onTip={setTip} />
+                  </li>
+                ))}
               </ul>
             </div>
           ))}
         </nav>
 
-        <div className={`border-t border-sidebar-border px-6 py-5 ${collapsed ? "lg:px-0 lg:text-center" : ""}`}>
-          <p className={`truncate font-serif text-base ${collapsed ? "lg:hidden" : ""}`}>{user.name}</p>
-          <form action={logout}>
-            <button type="submit" className={`text-xs text-sidebar-muted hover:text-sidebar-text ${collapsed ? "lg:hidden" : "mt-0.5"}`}>
-              Sair
-            </button>
-          </form>
-          {collapsed && (
-            <span className="hidden size-8 place-items-center rounded-full border border-sidebar-border text-xs lg:inline-grid" aria-hidden="true">
-              {user.name.charAt(0).toUpperCase()}
-            </span>
-          )}
-        </div>
+        <SidebarAccount user={user} collapsed={collapsed} onTip={setTip} />
       </aside>
+
+      {tip && (
+        <div aria-hidden="true" className="night-scope menu-in pointer-events-none fixed left-[5.25rem] z-40 hidden -translate-y-1/2 whitespace-nowrap rounded-sm border border-sidebar-border bg-sidebar-raised px-2.5 py-1.5 text-xs text-sidebar-text shadow-lg lg:block" style={{ top: tip.top }}>
+          {tip.label}
+        </div>
+      )}
     </>
   );
 }

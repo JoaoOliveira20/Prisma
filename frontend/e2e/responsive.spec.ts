@@ -17,6 +17,22 @@ test("menu mobile abre, navega e fecha com Esc", async ({ page }) => {
   await expect(nav.getByRole("link", { name: "Pessoas" })).toBeHidden();
 });
 
+test("menu mobile prende o foco no menu, bloqueia o conteúdo e devolve o foco ao fechar", async ({ page }) => {
+  await loginAsDemo(page);
+  await page.getByRole("button", { name: "Abrir menu" }).click();
+  const nav = page.getByRole("navigation", { name: "Principal" });
+  await expect(nav.getByRole("link", { name: "Início" })).toBeFocused();
+  await expect(page.locator("#conteudo")).toHaveAttribute("inert", "");
+  expect(await page.evaluate(() => document.documentElement.style.overflow)).toBe("hidden");
+  const box = await nav.getByRole("link", { name: "Pessoas" }).boundingBox();
+  expect(box!.height).toBeGreaterThanOrEqual(44);
+
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Abrir menu" })).toBeFocused();
+  await expect(page.locator("#conteudo")).not.toHaveAttribute("inert", "");
+  expect(await page.evaluate(() => document.documentElement.style.overflow)).toBe("");
+});
+
 test("sem rolagem horizontal nas telas principais", async ({ page }) => {
   await loginAsDemo(page);
   for (const path of ["/", "/explorar", "/estilos", "/pessoas", "/estrategias", "/referencias", "/grupos", "/favoritos", "/tags", "/estilos/bauhaus", "/pessoas/walter-gropius", "/estrategias/sistemas-de-grade", "/estilos/novo", "/estilos/bauhaus/editar"]) {

@@ -12,11 +12,14 @@ const paths: Record<IconName, string> = {
   image: "M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4M9 9.5h.01",
   tag: "M3 12V4h8l10 10-8 8L3 12zM7.5 8.5h.01",
   folder: "M3 6h6l2 2h10v11H3z",
+  route: "M6 20a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 9a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM6 15V9.5a3 3 0 013-3h6M9 17.5h4.5a3 3 0 003-3V9",
+  logout: "M10 4H5v16h5M15 8l4 4-4 4M19 12H9",
+  chevron: "M14.5 6l-6 6 6 6",
 };
 
 export function NavIcon({ name }: { name: IconName }) {
   return (
-    <svg viewBox="0 0 24 24" className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="size-[1.125rem] shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d={paths[name]} />
     </svg>
   );

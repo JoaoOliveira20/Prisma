@@ -41,19 +41,20 @@ Imagem sem moldura (ou **placa tipográfica**), legenda estilo museu (eyebrow co
 
 ## Detalhes: páginas de dimensões
 
-`/estilos/[slug]`, `/pessoas/[slug]`, `/estrategias/[slug]` compartilham `DetailHeader` e uma sequência de seções (`DimensionSection`: rótulo à esquerda, conteúdo à direita). Não há abas: **todas as dimensões estão na página**, com um **índice fixo** no topo (`SectionNav`, links âncora com contagem; o item da seção visível recebe `aria-current="location"`).
+`/estilos/[slug]`, `/pessoas/[slug]`, `/estrategias/[slug]` compartilham `DetailHeader` e uma sequência de seções (`DimensionSection`: rótulo à esquerda, conteúdo à direita). Não há abas: as dimensões estão na página, com um **índice fixo** no topo (`SectionNav`, links âncora com contagem; o item visível recebe `aria-current="location"` e um traço desliza até ele). Dimensões que crescem são **portais**: mostram uma prévia e levam a uma lista filtrada ([ADR-014](../adr/ADR-014-dimension-portals.md)).
 
 -   **Cabeçalho:** trilha, eyebrow com filete espectral, título enorme, subtítulo/lede, fatos (período, origem ou atuação) em definição com filetes, tags em texto, ações (coração + menu "⋯" com Salvar em grupo, Editar e Excluir). Variações: estilo (imagem 4:3 à esquerda), pessoa (retrato 4:5 menor à esquerda, período como subtítulo), estratégia (imagem à direita).
--   **Estilo:** História (abertura em serifa grande + corpo), Características (lista numerada), Influências, Pessoas (retratos), Estratégias (lista), Referências (mosaico + botão "Adicionar referência" para o dono) e **Estilos relacionados** (até 3, por tags em comum, vindos da API).
--   **Pessoa:** Biografia, Estilos, Referências.
--   **Estratégia:** Descrição, "Aplica-se a" (estilos), Referências.
+-   **Estilo:** **Sobre o estilo** (História, Características numeradas e Influências numa só seção), **Pessoas** (até 6, retratos), **Estratégias** (até 5, lista), **Referências** (8 mais recentes em mosaico + botão "Adicionar referência" para o dono) e **Estilos relacionados** (até 3, por tags em comum). Pessoas e Estratégias terminam com "Ver as N …" quando há mais que a prévia (`/pessoas?style=`, `/estrategias?style=`); Referências sempre termina com "Ver todas as N referências" e o índice fixo tem "Referências →", ambos para `/estilos/[slug]/referencias`, uma página só de imagens (`EntityReferences`: trilha, busca, adicionar, contagem, mosaico e paginação).
+-   **Pessoa:** Biografia, Estilos, Referências (prévia de 8 + "Ver todas" → `/pessoas/[slug]/referencias`).
+-   **Estratégia:** Descrição, "Aplica-se a" (estilos), Referências (prévia de 8 + "Ver todas" → `/estrategias/[slug]/referencias`).
+-   **Listas filtradas:** `FilterContext` mostra "Filtrando por estilo/pessoa/estratégia: Nome" com "Abrir …" e "Remover filtro"; o filtro `style` persiste em busca, ordenação, tags e paginação.
 -   Seções sem conteúdo mostram uma frase curta em serifa. O conteúdo não precisa estar completo.
 -   Excluir pede confirmação em modal (`ConfirmDialog`).
 
 ## Decisões
 
 -   **Composição por tipo** em vez de uma grade única; ver ADR-013.
--   **Páginas contínuas com índice fixo** em vez de abas: coerente com "várias dimensões" e sem esconder conteúdo.
+-   **Páginas contínuas com índice fixo** em vez de abas: coerente com "várias dimensões" e sem esconder conteúdo. Conteúdo editorial fica na página; coleções que crescem viram portais para listas filtradas (ADR-014).
 -   **Um `ContentBrowser`/`ContentGrid`/`ImageTile` para os três tipos**, com mapeadores em `lib/content.ts` e layouts selecionados por tipo; evita três cópias, ao custo de uma camada de apresentação.
 -   Rotas por **slug**, estáveis (a API não altera o slug ao renomear).
 -   Edição em páginas próprias (`/…/editar`), não inline (`FRONTEND.md` sugere edição "dentro da página"; edição inline não foi implementada).
@@ -67,4 +68,4 @@ Imagem sem moldura (ou **placa tipográfica**), legenda estilo museu (eyebrow co
 
 ## Arquivos
 
-`app/(app)/{page,explorar,estilos,pessoas,estrategias}/**`, `components/content/*` (`ImageTile`, `ContentGrid`, `StrategyList`, `CoverImage`, `ContentBrowser`, `ContentFilters`, `ListSearch`, `DetailActions`, `Paragraphs`, `NumberedList`), `components/layout/{PageHeader,Section,DimensionSection,DetailHeader,SectionNav}.tsx`, `lib/content.ts`, `lib/data.ts`.
+`app/(app)/{page,explorar,estilos,pessoas,estrategias}/**`, `components/content/*` (`ImageTile`, `ContentGrid`, `StrategyList`, `CoverImage`, `ContentBrowser`, `ContentFilters`, `ListSearch`, `DetailActions`, `Paragraphs`, `NumberedList`), `components/references/EntityReferences.tsx`, `components/layout/{PageHeader,Section,DimensionSection,DetailHeader,SectionNav,FilterContext}.tsx`, `lib/content.ts`, `lib/data.ts`.

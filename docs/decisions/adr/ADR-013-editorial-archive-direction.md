@@ -1,7 +1,7 @@
 # ADR-013: Direção visual "arquivo editorial"
 
 -   **Data:** 2026-10-08
--   **Status:** aceita
+-   **Status:** aceita (a regra "todas as dimensões completas no detalhe" foi substituída pelo [ADR-014](ADR-014-dimension-portals.md))
 -   **Substitui (visualmente):** o desenho inicial de catálogo (sidebar + cabeçalho com busca + filtros em pílulas + grade uniforme de cartões), descrito até então em `frontend/design-system.md` e `frontend/content-pages.md`.
 
 ## Contexto

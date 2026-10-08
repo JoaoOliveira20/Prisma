@@ -88,7 +88,16 @@ Hover: mudança de cor de texto/sublinhado ou zoom de imagem (nunca sombras). Fo
 
 ## Movimento
 
-Curto e com propósito: zoom de imagem, deslocamento de 4 a 8 px em índices tipográficos ao passar o mouse, e animações próprias da paleta e do formulário de login. `prefers-reduced-motion` reduz tudo a ~0 ms. Sem parallax e sem movimento contínuo.
+Movimento é parte da identidade, mas discreto: tudo usa `transform` e `opacity`, curva única `--ease-out` (`cubic-bezier(.2,.8,.2,1)`), 140 a 420 ms, sem bibliotecas. Camadas (definidas em `globals.css`):
+
+-   **Entrada de página** (`app/(app)/template.tsx` + `.page-in`): fade com deslocamento de 8 px a cada navegação; sem `fill-mode: forwards` para não deixar `transform` residual.
+-   **Resultados** (`.results-in`): lista e grade reaparecem quando filtros, busca ou página mudam (o contêiner tem `key` com os parâmetros).
+-   **Revelação ao rolar** (`.reveal`): `animation-timeline: view()` em seções, mosaicos e tiles, apenas onde o navegador suporta (`@supports`); sem JavaScript.
+-   **Imagens** (`FadeImage`): aparecem com fade ao carregar; zoom de 3% no hover só em tiles e mosaicos.
+-   **Diálogos** (`dialog`, exceto a paleta): transição de entrada e saída por `@starting-style` + `allow-discrete`; menus (`.menu-in`) e resultados da paleta (`.result-in`, escalonados) entram suavemente.
+-   **Microinterações:** sublinhado que se desenha em filtros e links (`.nav-link`), traço deslizante no `SectionNav`, "pulo" do coração ao favoritar (`.heart-pop`), `active:scale` em botões, setas que deslocam em links de "Ver todas".
+
+`prefers-reduced-motion` zera animações e transições (regra global + remoções explícitas das animações por rolagem e dos diálogos). Sem parallax e sem movimento contínuo.
 
 ## Responsividade
 

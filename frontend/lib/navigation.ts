@@ -1,4 +1,4 @@
-export type IconName = "home" | "compass" | "layers" | "users" | "book" | "image" | "folder" | "tag" | "plus" | "heart" | "search";
+export type IconName = "home" | "compass" | "layers" | "users" | "book" | "image" | "folder" | "tag" | "plus" | "heart" | "search" | "route" | "logout" | "chevron";
 
 export type NavigationItem = {
   label: string;
@@ -7,13 +7,13 @@ export type NavigationItem = {
 };
 
 export type NavigationGroup = {
-  label: string;
+  label: string | null;
   items: NavigationItem[];
 };
 
 export const navigationGroups: NavigationGroup[] = [
   {
-    label: "Arquivo",
+    label: null,
     items: [
       { label: "Início", href: "/", icon: "home" },
       { label: "Explorar", href: "/explorar", icon: "compass" },
@@ -24,20 +24,17 @@ export const navigationGroups: NavigationGroup[] = [
     items: [
       { label: "Estilos", href: "/estilos", icon: "layers" },
       { label: "Pessoas", href: "/pessoas", icon: "users" },
-      { label: "Estratégias", href: "/estrategias", icon: "book" },
+      { label: "Estratégias", href: "/estrategias", icon: "route" },
       { label: "Referências", href: "/referencias", icon: "image" },
+      { label: "Tags", href: "/tags", icon: "tag" },
     ],
   },
   {
-    label: "Coleções",
+    label: "Minha coleção",
     items: [
       { label: "Favoritos", href: "/favoritos", icon: "heart" },
       { label: "Grupos", href: "/grupos", icon: "folder" },
     ],
-  },
-  {
-    label: "Vocabulário",
-    items: [{ label: "Tags", href: "/tags", icon: "tag" }],
   },
 ];
 

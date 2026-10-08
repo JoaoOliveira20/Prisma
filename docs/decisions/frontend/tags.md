@@ -14,11 +14,11 @@ Um **índice tipográfico do vocabulário**, em duas colunas em telas largas, na
 -   Cada tag é uma linha (`TagRow`) com o nome em serifa grande, "N conteúdos" e atalhos "Estilos / Pessoas / Estratégias" (a listagem filtrada por aquela tag, `?tag=slug`).
 -   Para tags **do próprio usuário**: ações em texto **Renomear** (troca o nome por um campo inline com Salvar/Cancelar) e **Excluir** (confirmação em modal; **desabilitado** quando a tag está em uso, e a API também recusa com 409).
 -   Tags do sistema (criadas pelo seeder) e de outros usuários mostram "somente leitura" e não têm ações.
--   Item "Tags" no grupo "Vocabulário" da sidebar.
+-   Item "Tags" no grupo "Dimensões" da sidebar (ADR-017).
 
 ## Uso nos formulários
 
-Os formulários de estilo, pessoa e estratégia listam todas as tags como "chips" (`components/ui/ChipCheckboxes.tsx`) e têm o link "Gerenciar tags" para esta tela.
+Os formulários de estilo, pessoa, estratégia **e de referência** listam todas as tags como "chips" (`components/ui/ChipCheckboxes.tsx`) e têm o link "Gerenciar tags" para esta tela.
 
 ## Pesquisa
 

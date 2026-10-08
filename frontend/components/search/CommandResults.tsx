@@ -62,7 +62,8 @@ export function CommandResults({ groups, selectedIndex, listId, optionId, onSele
                 aria-selected={selected}
                 onClick={() => onSelect(item)}
                 onMouseMove={() => !selected && onHover(index)}
-                className="relative flex cursor-pointer items-center gap-3 rounded-sm px-3 py-2"
+                style={{ "--i": Math.min(index, 8) } as React.CSSProperties}
+                className="result-in relative flex cursor-pointer items-center gap-3 rounded-sm px-3 py-2"
               >
                 <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-sm bg-surface text-text-muted">
                   {item.icon ? <NavIcon name={item.icon} /> : <CoverImage name={item.label} coverUrl={item.imageUrl} className="size-9" sizes="36px" />}

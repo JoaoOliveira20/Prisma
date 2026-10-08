@@ -6,13 +6,37 @@
 
 Formar uma **biblioteca visual** do sistema, não só uma imagem de capa (`../../IDEIA.md`). Uma **referência** é uma imagem (arquivo enviado ou URL) com título, descrição, crédito e fonte, que pode inspirar ou ilustrar **vários** estilos, pessoas e estratégias ao mesmo tempo.
 
-## Página `/referencias` (biblioteca)
+## Página `/referencias` (biblioteca visual)
 
-`app/(app)/referencias/page.tsx`. Mostra **todas as imagens do sistema**, de todos os usuários: referências **e** as capas de estilos e estratégias e as fotos de pessoas (consulta unificada `GET /images`). Em colunas ("masonry"), sem moldura, cada imagem tem legenda estilo museu (**título em serifa e uma curta descrição**); imagens que não são referências mostram a origem ("Estilo", "Pessoa", "Estratégia").
+`app/(app)/referencias/page.tsx` ([ADR-016](../adr/ADR-016-reference-library-as-visual-archive.md)). Mostra **todas as imagens do sistema** (referências, capas de estilos e estratégias, fotos de pessoas; `GET /images`). A imagem é o conteúdo: não há cartão com moldura.
 
-Filtros (`components/references/ImageFilters.tsx`, tudo por URL, sem JavaScript; origem como links de texto sublinhados, busca com borda inferior): **origem** (Todas, Referências, Estilos, Pessoas, Estratégias), **busca** (título, descrição, crédito), **estilo** (mostra o que se relaciona àquele estilo: a capa dele, referências vinculadas e imagens de pessoas e estratégias ligadas a ele) e **"só o que eu criei"**. Paginação de 48 por página; página inexistente volta para a última.
+**Estrutura, de cima para baixo**
 
-Botão **Nova referência** (`NewReferenceButton`) abre o modal de criação.
+1.  **Cabeçalho compacto:** filete + "Biblioteca visual", título, uma frase (oculta no mobile), a **contagem ao vivo** em serifa grande (`aria-live`) e "Nova referência".
+2.  **Contexto** (`FilterContext`), só quando se chega de um estilo, pessoa ou estratégia: "Filtrando por estilo" com o nome em serifa, "Abrir estilo" e "Remover filtro".
+3.  **Ferramentas** (`LibraryShell`, componente cliente que escreve na URL com `router.replace`): busca **ao vivo** (350 ms, Enter aplica na hora, "×" limpa; casa título, descrição, crédito, fonte, **tags** e **nomes de estilos, pessoas e estratégias vinculados**), botão **Filtros** com contador (painel que expande, com `inert` quando fechado: Estilo, Pessoa, Estratégia, Tag, Coleção e "só o que eu criei"), **ordem** (mais recentes/mais antigas), abas de origem (Todas, Referências, Estilos, Pessoas, Estratégias; ocultas quando o contexto é pessoa/estratégia) e **chips dos filtros ativos** removíveis, com "Limpar tudo". "Coleção" cobre Favoritos e grupos (`group=id`, só grupos do próprio usuário). Enquanto a navegação carrega, os resultados ficam a 50% de opacidade (`aria-busy`).
+4.  **Última adição** (`FeaturedReference`), só na página 1 sem filtros e se a imagem mais recente for uma referência: imagem grande + título, descrição, "Faz parte de …" e "Abrir referência".
+5.  **Mosaico** (`ReferenceGallery`): colunas ("masonry", 2 no mobile até 5 em telas largas) com a proporção real de cada imagem, sem moldura, legenda de **uma linha** (eyebrow com os conteúdos vinculados + título em serifa, que leva à página da referência). No hover/foco aparecem, sem painel: as **tags** (degradê leve no pé da imagem), o coração e "salvar em grupo" (sempre visíveis em telas sem hover); o cursor é de ampliar. Clicar na imagem abre o lightbox (visualização rápida, com setas e "Abrir página da referência"). "Selecionar imagens" (texto discreto) ativa a seleção em lote.
+6.  **Estados:** vazio (`LibraryEmpty`, "O repertório começa com uma imagem", explica as conexões e oferece adicionar ou explorar estilos), **sem resultados** (diz o termo, explica o que a busca cobre e oferece voltar à biblioteca inteira) e carregamento (esqueleto da área do app).
+
+**Movimento:** entrada da página e dos resultados (`.results-in`), revelação por rolagem dos tiles (CSS, sem JS e sem stagger por item), fade ao carregar a imagem, zoom de 2% no hover, painel de filtros que expande, chips que entram; `prefers-reduced-motion` respeitado.
+
+**Escala:** paginação de 48 (sem rolagem infinita nem virtualização: a página fica sempre leve) e carregamento preguiçoso do `next/image`. **Limitações:** as imagens são servidas no tamanho original (sem miniaturas geradas pelo backend) e os seletores de filtro listam até 100 estilos/pessoas/estratégias; com muito mais que isso será preciso gerar miniaturas e trocar os seletores por busca.
+
+## Página da referência `/referencias/[id]`
+
+Imagem grande à esquerda; à direita, data de adição, título, descrição, crédito e fonte (domínio com link), **tags** (links para a biblioteca filtrada) e as ações (favoritar, salvar em grupo e, para o dono, Editar, Vincular a… e Remover). Abaixo, **"Faz parte de"**: cada estilo, pessoa e estratégia vinculados como uma linha grande em serifa (mais "Nas suas coleções", com os grupos), e **"Mais como esta"**: até 8 outras referências que compartilham algum vínculo ou tag (ordenadas por quantos compartilham, depois pelas mais recentes), calculadas no backend (`related` em `GET /references/{id}`).
+
+## Tags nas imagens
+
+Referências têm **tags próprias** ([ADR-015](../adr/ADR-015-reference-tags-and-explicit-links.md)); capas e fotos mostram as tags do conteúdo. Aparecem no hover do mosaico (até 3), no lightbox e na página da referência (`TagChips`, links para `/referencias?tag=slug`).
+
+## Vincular a conteúdos
+
+-   **Formulário** (`ReferenceModal`): "Vincular a" usa `EntityPicker` (campo com busca, resultados de estilos, pessoas e estratégias **do próprio usuário**, via `app/api/link-options?q=`, chips removíveis, navegação por setas/Enter) e "Tags da imagem" (chips, `app/api/tag-options`).
+-   **Vincular imagem existente** (`LinkExistingPanel`): agora com busca por título/crédito.
+-   **Lote:** na biblioteca e nas páginas de referências de um conteúdo, "Selecionar imagens" ativa a seleção (só imagens próprias); "Vincular a…" abre `LinkReferencesModal` e chama `POST /references/links`.
+-   **Individual:** menu "⋯" do lightbox → "Vincular a…" (só para imagens próprias).
 
 ## Modal de referência (`components/references/ReferenceModal.tsx`)
 
@@ -24,7 +48,7 @@ Um só componente para **criar** e **editar**, aberto de três lugares (bibliote
 
 ## Seção Referências de um conteúdo (`components/references/AddReferenceButton.tsx`)
 
-Na página de detalhe, a dimensão **Referências** mostra o mosaico do conteúdo e, para o dono, o botão **Adicionar referência** no rótulo da seção, que abre o modal com duas abas: **Enviar nova imagem** e **Vincular imagem existente** (`LinkExistingPanel`): lista as referências do próprio usuário que ainda não estão vinculadas àquele conteúdo (carregadas por `app/api/my-references/route.ts`), com seleção múltipla. É assim que **uma mesma imagem passa a ilustrar mais de um estilo**. Vínculos individuais também podem ser removidos pela edição.
+Na página de detalhe, a dimensão **Referências** mostra uma **prévia** (as 8 mais recentes) em mosaico, com "Ver todas as N referências" para a página própria do conteúdo (`/estilos|pessoas|estrategias/[slug]/referencias`, só imagens; ver [ADR-014](../adr/ADR-014-dimension-portals.md)). A biblioteca geral também aceita `style`, `person` e `strategy` e exibe a faixa "Filtrando por …". A prévia e, para o dono, o botão **Adicionar referência** no rótulo da seção, que abre o modal com duas abas: **Enviar nova imagem** e **Vincular imagem existente** (`LinkExistingPanel`): lista as referências do próprio usuário que ainda não estão vinculadas àquele conteúdo (carregadas por `app/api/my-references/route.ts`), com seleção múltipla. É assim que **uma mesma imagem passa a ilustrar mais de um estilo**. Vínculos individuais também podem ser removidos pela edição.
 
 ## Visualização (lightbox) — `ReferenceGallery.tsx`
 
