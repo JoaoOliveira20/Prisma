@@ -1,6 +1,6 @@
 # Ambiente de desenvolvimento
 
-**Situação:** implementada. Passo a passo operacional também em `../../../LEIA-ME.md`.
+**Situação:** implementada. Passo a passo operacional também em `../../../README.md`.
 
 ## Pré-requisitos
 
