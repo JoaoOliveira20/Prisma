@@ -119,9 +119,9 @@ test("paleta sem busca mostra comandos de navegação e de criação com dicas d
   await expect(dialog.getByRole("group", { name: "Criar" })).toBeVisible();
   await expect(dialog.getByRole("option", { name: "Grupos" })).toBeVisible();
   await expect(dialog.getByRole("option", { name: "Novo estilo" })).toBeVisible();
-  await expect(dialog.getByText("navegar")).toBeVisible();
-  await expect(dialog.getByText("abrir")).toBeVisible();
-  await expect(dialog.getByText("fechar")).toBeVisible();
+  await expect(dialog.getByText(/navegar/)).toBeVisible();
+  await expect(dialog.getByText(/abrir/)).toBeVisible();
+  await expect(dialog.getByText(/fechar/)).toBeVisible();
   await expect(dialog.getByRole("option").first()).toHaveAttribute("aria-selected", "true");
 });
 
@@ -210,3 +210,59 @@ test("destaque da paleta acompanha a opção selecionada", async ({ page }) => {
     expect(Math.abs(box!.height - optionBox!.height)).toBeLessThanOrEqual(2);
   }
 });
+
+test("paleta: tamanho moderado, destino do item selecionado e foco devolvido ao botão da sidebar", async ({ page }) => {
+  await register(page);
+  await page.goto("/explorar");
+  await page.waitForLoadState("networkidle");
+  const trigger = page.getByRole("button", { name: "Buscar em tudo" }).first();
+  await trigger.click();
+  const dialog = page.getByRole("dialog", { name: "Pesquisa global" });
+  await expect(dialog.getByRole("combobox")).toBeFocused();
+  const box = (await dialog.boundingBox())!;
+  expect(box.width).toBeGreaterThanOrEqual(700);
+  expect(box.width).toBeLessThanOrEqual(752);
+
+  const selected = dialog.getByRole("option", { selected: true });
+  await expect(selected).toContainText("Abrir");
+  await expect(dialog.getByRole("option", { selected: false }).first()).not.toContainText("Abrir");
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(trigger).toBeFocused();
+});
+
+test("paleta sem resultado explica e oferece limpar a busca; rodapé só mostra o que se aplica", async ({ page }) => {
+  await register(page);
+  await page.goto("/explorar");
+  await page.waitForLoadState("networkidle");
+  await page.keyboard.press("Control+k");
+  const dialog = page.getByRole("dialog", { name: "Pesquisa global" });
+  await dialog.getByRole("combobox").fill("zzzzqqqq");
+  await expect(dialog.getByText("Nenhum resultado para “zzzzqqqq”.")).toBeVisible();
+  await expect(dialog.getByText(/navegar/)).toHaveCount(0);
+  await expect(dialog.getByText(/fechar/)).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Limpar busca", exact: true }).last().click();
+  await expect(dialog.getByRole("combobox")).toHaveValue("");
+  await expect(dialog.getByRole("combobox")).toBeFocused();
+  await expect(dialog.getByRole("group", { name: "Ir para" })).toBeVisible();
+});
+
+test("paleta mostra erro com tentativa de novo quando a busca falha", async ({ page }) => {
+  await register(page);
+  await page.goto("/explorar");
+  await page.waitForLoadState("networkidle");
+  let failures = 1;
+  await page.route("**/api/search**", (route) => {
+    if (failures-- > 0) return route.fulfill({ status: 500, body: "{}" });
+    return route.continue();
+  });
+  await page.keyboard.press("Control+k");
+  const dialog = page.getByRole("dialog", { name: "Pesquisa global" });
+  await dialog.getByRole("combobox").fill("estilo");
+  await expect(dialog.getByRole("alert")).toContainText("Não foi possível pesquisar agora.");
+  await dialog.getByRole("button", { name: "Tentar novamente" }).click();
+  await expect(dialog.getByRole("alert")).toHaveCount(0);
+});
+

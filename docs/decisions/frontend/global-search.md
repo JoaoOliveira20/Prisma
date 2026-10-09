@@ -16,10 +16,11 @@ O que foi trazido do exemplo: gatilho com atalho, caixa de busca com ícone e bo
 -   **Com texto:** os comandos são filtrados **na hora**, ignorando maiúsculas e acentos (`estrategia` encontra "Estratégias"), e a API é consultada com **debounce de 200 ms** e cancelamento da requisição anterior (`GET /api/search?q=`, Route Handler `app/api/search/route.ts`). Resultados da API vêm depois dos comandos, agrupados por tipo.
 -   O Route Handler consulta `/styles`, `/people`, `/strategies`, `/references`, `/groups` e `/tags` em paralelo e devolve até **5 itens por tipo**, com `href`, nome, subtítulo e imagem. Destinos: estilos/pessoas/estratégias → página de detalhe; **referências** → `/referencias?q=<título>`; **grupos** → `/grupos/<id>`; **tags** → `/explorar?tag=<slug>`. O comando **Nova referência** leva a `/referencias?nova=1`, que abre o modal de criação ao carregar.
 -   **Teclado:** `↑`/`↓` movem a seleção e dão a volta nas pontas; `Enter` abre o item selecionado; `Esc` fecha; a seleção volta ao primeiro item a cada texto novo. **Mouse:** passar o mouse seleciona, clicar abre; clicar fora fecha.
--   **Item selecionado:** destaque deslizante (uma camada única, `data-palette-highlight`, movida por `transform` com transição de 180 ms, posicionada medindo o item) e uma dica `↵` no fim da linha.
+-   **Item selecionado:** destaque deslizante (uma camada única, `data-palette-highlight`, movida por `transform` com transição de 180 ms, posicionada medindo o item), um **filete espectral vertical** na borda esquerda do destaque (a mesma linguagem do item ativo da sidebar) e, no fim da linha, "Abrir ↵" (o destino da ação; não depende só de cor).
+-   **Composição (2026-10-09):** painel de **46 rem** (antes 40), a 10% da altura da janela (no celular, 12 px do topo e 12 px de margem lateral); lista de até **30 rem** (limitada por `100dvh − 10rem`), com `overscroll-contain`. O campo ganhou presença (serifa `text-xl`, ícone maior, `py-5`) e, ao receber foco, um **filete espectral** de 2 px se desenha sob ele (`.spectrum-gradient`); durante a busca esse mesmo filete corre (`.palette-loading`). Cabeçalhos de grupo mostram a **contagem**; linhas de resultado têm miniatura de 40 px e nome em 15 px com subtítulo secundário; as linhas de **comando** são compactas (ícone de 32 px). Com texto, o rodapé informa "N resultados". Sem texto, o campo mostra a dica `esc`; com texto, o botão "×" limpa. No **celular** aparece um botão "Fechar" no cabeçalho e o rodapé de dicas some.
 -   **Animações** (CSS em `app/globals.css`, classe `command-palette`): entrada de 160 ms (opacidade + leve subida e zoom) e saída de 120 ms; o fundo escurece com transição própria. Para a saída, o fechamento nativo é adiado até o fim da animação (`data-closing`, com um fallback de 250 ms). Reabrir durante a saída cancela o fechamento. `prefers-reduced-motion` reduz tudo a ~0 ms (regra global).
--   **Estados:** carregando ("Buscando…" ao lado do campo), erro ("Não foi possível pesquisar agora."), sem resultados ("Nenhum resultado para “…”") e a lista de comandos quando vazio.
--   **Acessibilidade:** `combobox` com `aria-controls`, `aria-activedescendant` e `aria-autocomplete`; lista `listbox` com grupos (`role="group"` e rótulo) e opções `aria-selected`; botão "Limpar busca" rotulado; o foco volta ao campo ao limpar. O anel de foco global é desativado só no campo da paleta (ele ficava cortado pela borda do diálogo); o cursor de texto e o destaque indicam o foco.
+-   **Estados:** carregando (filete animado sob o campo e "Buscando…" anunciado a leitores de tela), erro ("Não foi possível pesquisar agora." com **Tentar novamente**), sem resultados (título "Nenhum resultado para “…”", uma frase de orientação e **Limpar busca**; o rodapé só mostra "fechar") e a lista de comandos quando vazio.
+-   **Acessibilidade:** `combobox` com `aria-controls`, `aria-activedescendant` e `aria-autocomplete`; lista `listbox` com grupos (`role="group"` e rótulo) e opções `aria-selected`; botão "Limpar busca" rotulado; o foco volta ao campo ao limpar. O anel de foco global é desativado só no campo da paleta (ele ficava cortado pela borda do diálogo); o foco é indicado pelo filete espectral sob o campo, pelo cursor e pelo destaque do item. Ao fechar, o foco volta ao elemento que abriu (o `<dialog>` nativo restaura), e o fundo fica inerte enquanto a paleta está aberta.
 
 ## Decisões
 
@@ -34,13 +35,12 @@ O que foi trazido do exemplo: gatilho com atalho, caixa de busca com ícone e bo
 -   Seis chamadas à API por pesquisa (em paralelo).
 -   Tags levam só à listagem de estilos; referências abrem a biblioteca filtrada, não o item.
 -   Não há atalhos de teclado por comando (o exemplo original mostra atalhos; aqui só `↵`).
--   O atalho aparece como "Ctrl K" mesmo no Mac (funciona com `Cmd+K`).
+-   O gatilho da sidebar mostra ⌘ K no Mac/iOS e Ctrl K nos demais.
 -   A animação de reflow ao filtrar (itens deslizando) do exemplo original não foi reproduzida; a lista troca de conteúdo sem transição, só o destaque desliza.
--   Os modais comuns (`ui/Modal`) ainda não têm animação de entrada/saída; só a paleta.
 
 ## Testes
 
-`e2e/tags-search.spec.ts` (ver [testing.md](testing.md)): grupos por tipo, comandos sem busca, filtro por texto e acentos, ciclo das setas, `aria-activedescendant`, Enter, limpar, Esc, clique fora, reabertura, comando que abre o modal e posição do destaque.
+`e2e/tags-search.spec.ts` (ver [testing.md](testing.md)): grupos por tipo, comandos sem busca, filtro por texto e acentos, ciclo das setas, `aria-activedescendant`, Enter, limpar, Esc, clique fora, reabertura, comando que abre o modal, posição do destaque, **largura do painel, "Abrir" só no item selecionado e retorno do foco ao botão da sidebar**, estado sem resultado (com "Limpar busca") e **erro com "Tentar novamente"** (rota `/api/search` simulada). `e2e/responsive.spec.ts`: no celular o painel cabe na tela, o botão "Fechar" funciona e os itens têm ao menos 44 px.
 
 ## Referência visual
 

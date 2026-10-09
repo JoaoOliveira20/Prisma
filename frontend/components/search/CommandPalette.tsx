@@ -45,6 +45,7 @@ export function CommandPalette() {
   const [closing, setClosing] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [result, setResult] = useState<SearchState>({ status: "idle", groups: [] });
+  const [attempt, setAttempt] = useState(0);
 
   const term = query.trim();
   const groups = useMemo(() => [...matchCommands(term), ...(term === "" ? [] : result.groups)], [term, result.groups]);
@@ -109,7 +110,7 @@ export function CommandPalette() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [term]);
+  }, [term, attempt]);
 
   const select = (item: PaletteItem) => {
     router.push(item.href);
@@ -156,10 +157,10 @@ export function CommandPalette() {
       }}
       onAnimationEnd={onAnimationEnd}
       onClick={(event) => event.target === dialogRef.current && requestClose()}
-      className="command-palette m-auto mt-[12vh] w-[min(40rem,calc(100vw-2rem))] overflow-hidden rounded-sm border border-border-strong bg-surface-raised p-0 text-text shadow-2xl backdrop:bg-night/60"
+      className="command-palette m-auto mt-3 w-[min(46rem,calc(100vw-1.5rem))] overflow-hidden rounded-sm border border-border-strong bg-surface-raised p-0 text-text shadow-[0_28px_70px_-28px_rgba(7,8,11,0.55)] backdrop:bg-night/55 sm:mt-[10vh]"
     >
-      <div className="flex items-center gap-3 border-b border-border px-4">
-        <svg viewBox="0 0 24 24" className="size-4 shrink-0 text-text-muted" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+      <div className="group relative flex items-center gap-3 border-b border-border px-4 sm:px-5">
+        <svg viewBox="0 0 24 24" className="size-5 shrink-0 text-text-muted" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">
           <circle cx="11" cy="11" r="7" />
           <path d="M20 20l-4-4" />
         </svg>
@@ -172,7 +173,7 @@ export function CommandPalette() {
             setSelectedIndex(0);
           }}
           onKeyDown={onInputKeyDown}
-          placeholder="Buscar estilos, pessoas, referências ou digitar um comando…"
+          placeholder="Buscar em todo o acervo ou ir para…"
           aria-label="Buscar"
           role="combobox"
           aria-expanded={items.length > 0}
@@ -180,10 +181,12 @@ export function CommandPalette() {
           aria-activedescendant={items.length > 0 ? optionId(activeIndex) : undefined}
           aria-autocomplete="list"
           autoComplete="off"
-          className="min-w-0 flex-1 bg-transparent py-4 font-serif text-lg outline-none placeholder:text-text-muted"
+          spellCheck={false}
+          enterKeyHint="search"
+          className="min-w-0 flex-1 bg-transparent py-5 font-serif text-xl outline-none placeholder:text-text-muted"
         />
-        {searching && <span role="status" className="text-xs text-text-muted">Buscando…</span>}
-        {query && (
+        <span role="status" className="sr-only">{searching ? "Buscando…" : ""}</span>
+        {query ? (
           <button
             type="button"
             aria-label="Limpar busca"
@@ -192,28 +195,72 @@ export function CommandPalette() {
               setSelectedIndex(0);
               inputRef.current?.focus();
             }}
-            className="grid size-6 shrink-0 place-items-center rounded-sm text-text-muted hover:bg-surface hover:text-text"
+            className="grid size-9 shrink-0 place-items-center rounded-sm text-text-muted transition-colors duration-200 hover:bg-surface hover:text-text"
           >
-            <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               <path d="M6 6l12 12M18 6L6 18" />
             </svg>
           </button>
+        ) : (
+          <kbd aria-hidden="true" className="hidden rounded-sm border border-border bg-surface px-1.5 py-0.5 text-[10px] text-text-muted sm:block">esc</kbd>
         )}
+        <button type="button" onClick={requestClose} className="shrink-0 px-1 py-2 text-sm text-text-muted underline decoration-border-strong underline-offset-4 sm:hidden">
+          Fechar
+        </button>
+        <span
+          aria-hidden="true"
+          className={`spectrum-gradient pointer-events-none absolute inset-x-0 -bottom-px h-0.5 origin-left transition-transform duration-300 ease-[var(--ease-out)] ${
+            searching ? "palette-loading scale-x-100" : "scale-x-0 group-focus-within:scale-x-100"
+          }`}
+        />
       </div>
 
       {isOpen && items.length > 0 && (
         <CommandResults groups={groups} selectedIndex={activeIndex} listId={listId} optionId={optionId} onSelect={select} onHover={setSelectedIndex} />
       )}
-      {failed && <p role="alert" className="px-4 py-8 text-center text-sm text-danger">Não foi possível pesquisar agora.</p>}
-      {nothingFound && <p className="px-4 py-8 text-center text-sm text-text-muted">Nenhum resultado para “{term}”.</p>}
+      {failed && (
+        <div role="alert" className="px-5 py-10 text-center">
+          <p className="font-serif text-xl">Não foi possível pesquisar agora.</p>
+          <p className="mt-1.5 text-sm text-text-muted">Verifique a conexão e tente de novo.</p>
+          <button
+            type="button"
+            onClick={() => setAttempt((count) => count + 1)}
+            className="mt-4 text-sm underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-text"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      )}
+      {nothingFound && (
+        <div className="results-in px-5 py-10 text-center">
+          <p className="font-serif text-xl">Nenhum resultado para “{term}”.</p>
+          <p className="mx-auto mt-1.5 max-w-sm text-sm leading-relaxed text-text-muted">Tente outra palavra, ou busque pelo nome de um estilo, pessoa, estratégia, tag ou grupo.</p>
+          <button
+            type="button"
+            onClick={() => {
+              setQuery("");
+              setSelectedIndex(0);
+              inputRef.current?.focus();
+            }}
+            className="mt-4 text-sm underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-text"
+          >
+            Limpar busca
+          </button>
+        </div>
+      )}
 
-      <div className="flex items-center gap-4 border-t border-border px-4 py-2 text-[11px] text-text-muted">
-        {footerHints.map((hint) => (
-          <span key={hint.keys} className="flex items-center gap-1.5">
-            <kbd className="rounded-sm border border-border bg-surface px-1.5 py-0.5 text-[10px]">{hint.keys}</kbd>
-            {hint.label}
-          </span>
-        ))}
+      <div className="flex items-center gap-4 border-t border-border px-5 py-2.5 text-[11px] text-text-muted">
+        <span className="hidden items-center gap-4 sm:flex">
+          {footerHints.filter((hint) => items.length > 0 || hint.keys === "esc").map((hint) => (
+            <span key={hint.keys} className="flex items-center gap-1.5">
+              <kbd className="rounded-sm border border-border bg-surface px-1.5 py-0.5 text-[10px]">{hint.keys}</kbd>
+              {hint.label}
+            </span>
+          ))}
+        </span>
+        {term !== "" && items.length > 0 && (
+          <span aria-live="polite" className="tabular ml-auto">{items.length} {items.length === 1 ? "resultado" : "resultados"}</span>
+        )}
       </div>
     </dialog>
   );

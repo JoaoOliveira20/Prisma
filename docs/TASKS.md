@@ -134,6 +134,14 @@ quando útil, arquivos afetados.
 
 -   2026-10-09: **sessão de 1 dia renovada pelo uso** (ADR-020): token com `expires_at` de 1 dia, `POST /auth/refresh`, renovação no `proxy` no máximo 1 vez por hora (cookie de marcação, sem renovar em prefetch), 401 limpa a sessão, tokens antigos receberam expiração, poda de tokens agendada. 78 testes PHPUnit; E2E de duração do cookie, renovação única e token inválido.
 
+-   2026-10-09: **README reescrito** como apresentação do produto: visão geral, 11 capturas reais em `docs/screenshots/` (geradas por `yarn screenshots`, a partir do seed oficial em um banco temporário), funcionalidades verificadas, stack, arquitetura, execução local, testes (78 PHPUnit e 70 E2E) e limitações. Na captura apareceu um defeito: palavras e numeração quebravam no meio em "Características" (lista em duas colunas dentro da coluna estreita de "Sobre"); `NumberedList` passou a ser uma coluna.
+
+-   2026-10-09: **busca e filtros das páginas de conteúdo** (ADR-021): busca automática (250 ms, sem Enter nem botão "Buscar"), tags como botões alternáveis, "×" no campo para limpar só o texto e "Limpar tudo" separado, hook `useUrlFilters` e `SearchField` compartilhados com a biblioteca de referências, estados vazio/carregando, mobile com tags rolando na horizontal e alvos de 40–44 px. Busca da sidebar intocada. Testes E2E novos (busca ao vivo, digitação rápida, contexto de estilo, celular).
+
+-   2026-10-09: **paleta de comandos redesenhada** (só o painel; sidebar e lógica de busca intactas): painel mais largo (46 rem) e lista mais alta, campo em destaque com filete espectral no foco e como indicador de carregamento, cabeçalhos com contagem, linhas de resultado com miniatura maior e comandos compactos, item selecionado com filete lateral e "Abrir ↵", estado sem resultado com orientação e "Limpar busca", erro com "Tentar novamente", botão "Fechar" no celular, rodapé contextual. Testes E2E novos (tamanho, foco devolvido, vazio, erro, celular).
+
+-   2026-10-09: **capturas do README atualizadas** (12 em `docs/screenshots/`, viewport de 1440 × 1000, geradas por `yarn screenshots` sobre o seed oficial): a busca e os filtros das listas, a biblioteca e a paleta de comandos redesenhadas foram recapturadas, e `search-filters.png` é nova. `mobile-menu`, `reference-details` e `style-detail` saíram idênticas byte a byte (já estavam atuais). README e contagem de testes (77 E2E) ajustados.
+
 ## Pendências conhecidas da primeira entrega
 
 -   Imagem de referência não pode ser trocada depois de criada; estilos/pessoas sem imagem não aparecem na biblioteca; capas e fotos não viram referência.
