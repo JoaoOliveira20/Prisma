@@ -5,6 +5,8 @@ Este diretório responde a duas perguntas sobre o Prisma:
 1.  **Como cada parte funciona hoje?** Documentos por área, em `architecture/`, `backend/`, `frontend/` e `infrastructure/`.
 2.  **Por que foi construída assim?** Cada documento registra suas decisões; as de maior impacto também têm um ADR em `adr/`, com histórico preservado.
 
+As capturas de tela usadas no `README.md` da raiz ficam em `docs/screenshots/` (diferente de `docs/assets/`, que guarda referências visuais, e de `frontend/public/images/`, que guarda imagens do app). São geradas com `yarn screenshots`, em `frontend/`, sobre um banco recém-populado pelo seed.
+
 Os documentos de `docs/` na raiz têm outro papel: `IDEIA.md` registra a intenção do produto; `FRONTEND.md`, `BACKEND.md` e `DESIGN-SYSTEM.md` são convenções de código; `TASKS.md` é o quadro de tarefas. Aqui fica o que **foi de fato implementado** e o porquê.
 
 > Estes documentos descrevem o código real na data indicada em cada um. Antes de confiar neles, confira a implementação; se divergirem, o código vence e o documento deve ser corrigido na mesma etapa.
