@@ -63,13 +63,13 @@ Referência visual: tela "10 login cadastro" de `docs/assets/screens/PRISMA_tela
 
 ## Proteção de rotas
 
--   `proxy.ts` redireciona para `/login` qualquer rota (exceto `login`, `_next`, `images`) sem o cookie.
+-   `proxy.ts` redireciona para `/login` qualquer rota (exceto `login`, `_next`, `images`) sem o cookie. **Renovação:** se a última renovação tem mais de 1 hora (e a requisição não é prefetch), o proxy chama `POST /auth/refresh` e regrava os dois cookies com `expires_in`; antes disso não chama a API. Resposta 401 apaga os cookies e leva ao login; falha de rede não bloqueia a navegação ([ADR-020](../adr/ADR-020-sliding-session.md)). Constantes em `lib/session-cookies.ts`.
 -   `app/(app)/layout.tsx` chama `getCurrentUser()` (`GET /auth/me`); se a API responder 401, `apiRequestOrLogin` redireciona para `/login`.
 -   `/login` consulta `getOptionalUser()`; se o token for válido, redireciona para `/`. O proxy **não** redireciona a partir de `/login` justamente para não criar laço com um cookie inválido.
 
 ## Cookie
 
-`prisma_token`: `httpOnly`, `SameSite=Lax`, `Secure` apenas em produção, `path=/`, 30 dias. Nunca é exposto a JavaScript do navegador.
+`prisma_token`: `httpOnly`, `SameSite=Lax`, `Secure` apenas em produção, `path=/`, validade de 1 dia (vinda de `expires_in` da API), renovada pelo uso. Junto dele, `prisma_session_refreshed_at` (mesmas opções) guarda quando foi a última renovação. Nunca é exposto a JavaScript do navegador.
 
 ## Validação e erros
 
@@ -82,7 +82,7 @@ Validação real no backend; no navegador só atributos HTML (`required`, `type=
 -   Conferido visualmente em 1920×1080, 1440×900, 1280×720, 1024×768, 768×1024 e 390×844; larguras muito fora disso (ultralargas, janelas muito estreitas em desktop) não foram verificadas.
 -   O teste de movimento reduzido só confirma que o formulário fica visível; não valida a aparência da arte.
 -   Sem proteção contra tentativas além do `throttle` da API.
--   O cookie é conferido apenas por presença no proxy; um token revogado só é detectado na primeira chamada à API.
+-   O cookie é conferido por presença no proxy; um token revogado só é detectado na primeira chamada à API ou na próxima renovação (até 1 hora).
 
 ## Testes
 

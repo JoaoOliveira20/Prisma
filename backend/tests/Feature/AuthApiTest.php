@@ -66,17 +66,50 @@ class AuthApiTest extends TestCase
             ->assertJsonPath('message', 'Você não tem permissão para esta ação.');
     }
 
-    public function test_tokens_expire_after_configured_lifetime(): void
+    public function test_tokens_last_one_day_and_login_reports_it(): void
     {
-        $user = User::factory()->create();
-        $token = $user->createToken('web')->plainTextToken;
+        $user = User::factory()->create(['password' => 'senha-segura-123']);
+
+        $login = $this->postJson('/api/auth/login', ['email' => $user->email, 'password' => 'senha-segura-123'])
+            ->assertOk()
+            ->assertJsonPath('expires_in', 86400);
+        $token = $login->json('token');
 
         $this->withToken($token)->getJson('/api/auth/me')->assertOk();
 
-        $this->travel(31)->days();
+        $this->travel(23)->hours();
         app('auth')->forgetGuards();
+        $this->withToken($token)->getJson('/api/auth/me')->assertOk();
 
+        $this->travel(2)->hours();
+        app('auth')->forgetGuards();
         $this->withToken($token)->getJson('/api/auth/me')->assertUnauthorized();
+    }
+
+    public function test_refresh_extends_the_current_token_only_while_it_is_valid(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('web', ['*'], now()->addDay())->plainTextToken;
+        $other = $user->createToken('web', ['*'], now()->addDay())->plainTextToken;
+
+        $this->travel(20)->hours();
+        app('auth')->forgetGuards();
+        $this->withToken($token)->postJson('/api/auth/refresh')->assertOk()->assertJsonPath('expires_in', 86400);
+
+        $this->travel(20)->hours();
+        app('auth')->forgetGuards();
+        $this->withToken($token)->getJson('/api/auth/me')->assertOk();
+        app('auth')->forgetGuards();
+        $this->withToken($other)->getJson('/api/auth/me')->assertUnauthorized();
+
+        $this->travel(5)->hours();
+        app('auth')->forgetGuards();
+        $this->withToken($token)->postJson('/api/auth/refresh')->assertUnauthorized();
+    }
+
+    public function test_refresh_requires_authentication(): void
+    {
+        $this->postJson('/api/auth/refresh')->assertUnauthorized();
     }
 
     public function test_login_is_rate_limited(): void

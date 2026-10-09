@@ -18,8 +18,8 @@ Todos exigem autenticação, exceto os dois primeiros.
 
 | Método e caminho | Função |
 | --- | --- |
-| `POST auth/register`, `POST auth/login` | Cadastro e login (limitados a 10/min) |
-| `GET auth/me`, `POST auth/logout` | Usuário atual; encerrar |
+| `POST auth/register`, `POST auth/login` | Cadastro e login (limitados a 10/min); devolvem `token`, `expires_in` (segundos) e `user` |
+| `GET auth/me`, `POST auth/refresh`, `POST auth/logout` | Usuário atual; renovar o token atual por mais 1 dia (`expires_in`); encerrar ([ADR-020](../adr/ADR-020-sliding-session.md)) |
 | `GET/POST tags`, `PUT/DELETE tags/{slug}` | Tags com `usage_count` e `can`; filtro `q`. Excluir tag em uso devolve 409 |
 | `GET/POST styles`, `GET/PUT/DELETE styles/{slug}` | Estilos. Filtros: `q` (nome, resumo, período, origem), `tag`, `sort=name\|recent`. O detalhe devolve só a **prévia** de `references` (8), `people` (6) e `strategies` (5), com `references_count`, `people_count` e `strategies_count` |
 | `GET/POST people`, `GET/PUT/DELETE people/{slug}` | Pessoas (mesmos filtros e `style` por slug; `q` também busca atuação; o detalhe traz 8 referências + `references_count`) |

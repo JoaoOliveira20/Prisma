@@ -136,3 +136,43 @@ test("favicon está disponível sem login e referenciado no head", async ({ page
   await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveCount(1);
   await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveCount(1);
 });
+
+test("sessão dura 1 dia e é renovada no máximo uma vez por hora de uso", async ({ page, context }) => {
+  await register(page);
+  const cookie = async (name: string) => (await context.cookies()).find((item) => item.name === name)!;
+
+  const token = await cookie("prisma_token");
+  const secondsLeft = token.expires - Date.now() / 1000;
+  expect(secondsLeft).toBeGreaterThan(86400 - 300);
+  expect(secondsLeft).toBeLessThanOrEqual(86400 + 5);
+
+  const marker = await cookie("prisma_session_refreshed_at");
+  await page.goto("/estilos");
+  await page.goto("/pessoas");
+  await page.getByRole("link", { name: "Estratégias", exact: true }).click();
+  await expect(page).toHaveURL(/\/estrategias$/);
+  expect((await cookie("prisma_session_refreshed_at")).value).toBe(marker.value);
+  expect((await cookie("prisma_token")).value).toBe(token.value);
+
+  await context.clearCookies({ name: "prisma_session_refreshed_at" });
+  await page.waitForTimeout(1100);
+  await page.goto("/estilos");
+  const renewedMarker = await cookie("prisma_session_refreshed_at");
+  const renewedToken = await cookie("prisma_token");
+  expect(Number(renewedMarker.value)).toBeGreaterThan(Number(marker.value));
+  expect(renewedToken.value).toBe(token.value);
+  expect(renewedToken.expires).toBeGreaterThan(token.expires);
+  await expect(page.getByRole("heading", { level: 1, name: "Estilos" })).toBeVisible();
+});
+
+test("token vencido no servidor leva ao login e limpa a sessão", async ({ page, context, request }) => {
+  const login = await request.post(`${process.env.E2E_API_URL ?? "http://localhost:8000/api"}/auth/register`, {
+    headers: { Accept: "application/json" },
+    data: { name: "Sessão curta", email: `short-${Date.now()}@example.com`, password: "senha-segura-123", password_confirmation: "senha-segura-123" },
+  });
+  const { token } = await login.json();
+  await context.addCookies([{ name: "prisma_token", value: `${token}-adulterado`, url: "http://localhost:3000" }]);
+  await page.goto("/estilos");
+  await expect(page).toHaveURL(/\/login$/);
+  expect((await context.cookies()).some((item) => item.name === "prisma_token")).toBe(false);
+});

@@ -132,6 +132,8 @@ quando útil, arquivos afetados.
 
 -   2026-10-09: **migrations reorganizadas** (ADR-019): uma por tabela (separadas `reference_items`/`referenceables`, `groups`/`group_items` e os quatro vínculos de conteúdo; `reference_item_tag` com nome de arquivo coerente), vínculos em ordem sequencial, `down()` da `scope_content_to_owner` corrigido para MySQL. Esquema comparado com o banco atual (idêntico, 23 tabelas), rollback e nova instalação testados em banco temporário, `migrations` do banco de desenvolvimento atualizada sem perder dados. Em seguida, migration nova `make_tags_user_required` (`tags.user_id` obrigatório com cascata), testada em `up`/`down` no MySQL e com teste de exclusão do usuário. 76 testes PHPUnit.
 
+-   2026-10-09: **sessão de 1 dia renovada pelo uso** (ADR-020): token com `expires_at` de 1 dia, `POST /auth/refresh`, renovação no `proxy` no máximo 1 vez por hora (cookie de marcação, sem renovar em prefetch), 401 limpa a sessão, tokens antigos receberam expiração, poda de tokens agendada. 78 testes PHPUnit; E2E de duração do cookie, renovação única e token inválido.
+
 ## Pendências conhecidas da primeira entrega
 
 -   Imagem de referência não pode ser trocada depois de criada; estilos/pessoas sem imagem não aparecem na biblioteca; capas e fotos não viram referência.

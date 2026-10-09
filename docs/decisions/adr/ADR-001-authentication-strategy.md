@@ -1,7 +1,7 @@
 # ADR-001: Autenticação por token Sanctum em cookie `httpOnly`
 
 -   **Data:** 2026-10-08
--   **Status:** aceita
+-   **Status:** aceita (duração e renovação da sessão revistas pelo [ADR-020](ADR-020-sliding-session.md))
 
 ## Contexto
 
@@ -10,7 +10,7 @@
 ## Decisão
 
 -   O Laravel emite **tokens pessoais do Sanctum** em `POST /api/auth/login` e `/register`.
--   O Next.js guarda o token no cookie **`prisma_token`**, `httpOnly`, `SameSite=Lax`, `Secure` em produção, validade de 30 dias.
+-   O Next.js guarda o token no cookie **`prisma_token`**, `httpOnly`, `SameSite=Lax`, `Secure` em produção, validade de 1 dia, renovada pelo uso ([ADR-020](ADR-020-sliding-session.md)).
 -   O token é usado somente por código de servidor do Next.js (ver ADR-003); o navegador nunca o lê.
 -   `frontend/proxy.ts` bloqueia rotas autenticadas quando o cookie não existe; a validade real é conferida pela API a cada requisição.
 
@@ -23,7 +23,7 @@
 ## Consequências
 
 -   Logout apaga o token no servidor (`currentAccessToken()->delete()`) e o cookie.
--   Os tokens **expiram em 30 dias** no servidor (`SANCTUM_EXPIRATION`, padrão 43200 minutos), igual ao cookie; depois disso é preciso entrar de novo (sem renovação). Um token vazado vale até expirar ou até o logout.
+-   Os tokens **expiram em 1 dia** no servidor (`expires_at`, `SESSION_TOKEN_MINUTES`), igual ao cookie, e são renovados enquanto há uso, no máximo uma vez por hora ([ADR-020](ADR-020-sliding-session.md)). Um token vazado vale até expirar ou até o logout.
 -   O limite de tentativas de login é por IP e, como o Next faz as chamadas, o IP visto pela API é o do servidor Next: antes de implantar, o IP real do cliente precisa ser encaminhado.
 -   Não existem escopos/abilities: todo token acessa toda a API do usuário.
 -   O proxy só confere a presença do cookie, então um cookie inválido só é detectado na primeira chamada à API (que redireciona para `/login`).

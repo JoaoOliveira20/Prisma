@@ -25,6 +25,6 @@
 
 ## Limitações conhecidas
 
--   Tokens **expiram em 30 dias** no servidor (`config/sanctum.php`, `SANCTUM_EXPIRATION` em minutos, padrão 43200), alinhado ao cookie do frontend; sem escopos e sem renovação (depois de 30 dias é preciso entrar de novo).
+-   Tokens **expiram em 1 dia** (`expires_at` de cada token; `SESSION_TOKEN_MINUTES`, padrão 1440, em `config/sanctum.php`) e são **renovados pelo uso**: `POST /auth/refresh` estende o token atual para mais 1 dia e devolve `expires_in` ([ADR-020](../adr/ADR-020-sliding-session.md)). Login e cadastro também devolvem `expires_in`. A expiração global do Sanctum fica desligada. Sem escopos.
 -   Sem verificação de e-mail, sem recuperação de senha, sem login social (o mockup `docs/assets/screens/PRISMA_telas_preview.png`, tela 10, mostra "Esqueceu a senha?" e "Continuar com o Google", ainda não implementados).
 -   Tokens antigos não são revogados ao se criar um novo.

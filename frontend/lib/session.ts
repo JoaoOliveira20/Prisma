@@ -1,22 +1,18 @@
 import { cookies } from "next/headers";
-
-const TOKEN_COOKIE = "prisma_token";
-const THIRTY_DAYS = 60 * 60 * 24 * 30;
+import { REFRESHED_COOKIE, sessionCookieOptions, TOKEN_COOKIE } from "./session-cookies";
 
 export async function getToken() {
   return (await cookies()).get(TOKEN_COOKIE)?.value;
 }
 
-export async function setToken(token: string) {
-  (await cookies()).set(TOKEN_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: THIRTY_DAYS,
-  });
+export async function setToken(token: string, expiresIn: number) {
+  const store = await cookies();
+  store.set(TOKEN_COOKIE, token, sessionCookieOptions(expiresIn));
+  store.set(REFRESHED_COOKIE, String(Date.now()), sessionCookieOptions(expiresIn));
 }
 
 export async function clearToken() {
-  (await cookies()).delete(TOKEN_COOKIE);
+  const store = await cookies();
+  store.delete(TOKEN_COOKIE);
+  store.delete(REFRESHED_COOKIE);
 }

@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -43,10 +44,25 @@ class AuthController extends Controller
         return response()->json(status: 204);
     }
 
+    public function refresh(Request $request): JsonResponse
+    {
+        $minutes = config('sanctum.session_minutes');
+        $token = $request->user()->currentAccessToken();
+
+        if ($token instanceof PersonalAccessToken) {
+            $token->forceFill(['expires_at' => now()->addMinutes($minutes)])->save();
+        }
+
+        return response()->json(['expires_in' => $minutes * 60]);
+    }
+
     private function tokenResponse(User $user, int $status = 200): JsonResponse
     {
+        $minutes = config('sanctum.session_minutes');
+
         return response()->json([
-            'token' => $user->createToken('web')->plainTextToken,
+            'token' => $user->createToken('web', ['*'], now()->addMinutes($minutes))->plainTextToken,
+            'expires_in' => $minutes * 60,
             'user' => $this->userPayload($user),
         ], $status);
     }

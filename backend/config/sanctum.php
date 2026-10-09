@@ -50,7 +50,9 @@ return [
     |
     */
 
-    'expiration' => (int) env('SANCTUM_EXPIRATION', 60 * 24 * 30),
+    'expiration' => null,
+
+    'session_minutes' => (int) env('SESSION_TOKEN_MINUTES', 60 * 24),
 
     /*
     |--------------------------------------------------------------------------

@@ -7,11 +7,11 @@ import type { FormState } from "@/lib/form";
 
 async function authenticate(path: string, payload: Record<string, FormDataEntryValue | null>): Promise<FormState> {
   try {
-    const { token } = await apiRequest<{ token: string }>(path, {
+    const { token, expires_in: expiresIn } = await apiRequest<{ token: string; expires_in: number }>(path, {
       method: "POST",
       body: JSON.stringify(payload),
     });
-    await setToken(token);
+    await setToken(token, expiresIn);
   } catch (error) {
     if (error instanceof ApiError) {
       return { message: error.message, errors: error.fieldErrors };
