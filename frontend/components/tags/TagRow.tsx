@@ -53,7 +53,6 @@ export function TagRow({ tag }: { tag: Tag }) {
         )}
         <div className="mt-2 text-sm text-text-muted">
           <span className="tabular">{usage}</span> {usage === 1 ? "conteúdo" : "conteúdos"}
-          {!tag.can?.update && " · somente leitura"}
           <span className="mx-2" aria-hidden="true">·</span>
           <nav aria-label={`Conteúdos com a tag ${tag.name}`} className="inline">
             <Link href={`/estilos?tag=${tag.slug}`} className="underline-offset-4 hover:text-text hover:underline">Estilos</Link>

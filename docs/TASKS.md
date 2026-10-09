@@ -128,6 +128,8 @@ quando útil, arquivos afetados.
 
 -   2026-10-08: **sidebar revisada** (ADR-017): três blocos (entrada, Dimensões com Tags, Minha coleção), item ativo em serifa com filete na borda e estado de seção de origem, minimizar persistente em cookie com dicas e chevron, logo como link, atalho ⌘/Ctrl, conta com avatar, ícone de Estratégias trocado, mobile em índice com foco, `inert` e bloqueio de rolagem. Sem Perfil/Configurações (não existem). Testes E2E novos para blocos, seção de origem, persistência do minimizar e foco do menu mobile.
 
+-   2026-10-09: **cada conta é um acervo privado** (ADR-018): estilos, pessoas, estratégias, referências, tags e grupos só aparecem para o dono (global scope `OwnedByUser`, 404 para registro alheio, slugs e nomes únicos por conta, validações por conta, consultas de `/images` filtradas); seeders criam tudo na conta demo; conta nova começa vazia com estados orientadores; Explorar mostra tudo **da conta**; removido o filtro "só o que eu criei". Migration `scope_content_to_owner` (índices por conta; tags sem dono foram para a conta demo). 75 testes PHPUnit (`DataIsolationApiTest` novo) e E2E reescritos (demo onde precisa do acervo, contas novas onde não precisa).
+
 ## Pendências conhecidas da primeira entrega
 
 -   Imagem de referência não pode ser trocada depois de criada; estilos/pessoas sem imagem não aparecem na biblioteca; capas e fotos não viram referência.

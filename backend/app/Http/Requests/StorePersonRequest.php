@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Person;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StorePersonRequest extends FormRequest
 {
@@ -19,9 +20,9 @@ class StorePersonRequest extends FormRequest
             'origin' => ['nullable', 'string', 'max:120'],
             'photo_url' => ['nullable', 'url:http,https', 'max:2048'],
             'tags' => ['nullable', 'array', 'max:20'],
-            'tags.*' => ['string', 'exists:tags,slug'],
+            'tags.*' => ['string', Rule::exists('tags', 'slug')->where('user_id', $this->user()->id)],
             'styles' => ['nullable', 'array', 'max:50'],
-            'styles.*' => ['string', 'exists:styles,slug'],
+            'styles.*' => ['string', Rule::exists('styles', 'slug')->where('user_id', $this->user()->id)],
         ];
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Concerns\Groupable;
 use App\Models\Concerns\HasReferences;
 use App\Models\Concerns\HasUniqueSlug;
 use App\Models\Concerns\HasUploadedImage;
+use App\Models\Concerns\OwnedByUser;
 use App\Models\Concerns\Searchable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 #[Fillable(['name', 'summary', 'history', 'influences', 'characteristics', 'period', 'origin', 'cover_url'])]
 class Style extends Model
 {
-    use Groupable, HasFactory, HasReferences, HasUniqueSlug, HasUploadedImage, Searchable;
+    use Groupable, HasFactory, HasReferences, HasUniqueSlug, HasUploadedImage, OwnedByUser, Searchable;
 
     protected function casts(): array
     {

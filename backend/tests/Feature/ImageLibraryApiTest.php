@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Person;
 use App\Models\Strategy;
 use App\Models\Style;
-use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -27,13 +26,14 @@ class ImageLibraryApiTest extends TestCase
         $style->references()->attach($reference);
         $outra = $owner->referenceItems()->create(['title' => 'Solta', 'image_url' => 'https://example.com/solta.jpg']);
 
+        Sanctum::actingAs($owner);
+
         return compact('owner', 'style', 'semImagem', 'person', 'strategy', 'reference', 'outra');
     }
 
     public function test_library_unifies_references_and_entity_images(): void
     {
         $this->seedLibrary();
-        Sanctum::actingAs(User::factory()->create());
 
         $response = $this->getJson('/api/images')->assertOk()->assertJsonPath('meta.total', 5);
         $kinds = collect($response->json('data'))->pluck('kind')->sort()->values()->all();
@@ -42,13 +42,12 @@ class ImageLibraryApiTest extends TestCase
         $reference = collect($response->json('data'))->firstWhere('title', 'Cartaz');
         $this->assertSame('Um cartaz famoso', $reference['description']);
         $this->assertSame('style', $reference['links'][0]['type']);
-        $this->assertFalse($reference['can']['update']);
+        $this->assertTrue($reference['can']['update']);
     }
 
     public function test_filters_by_kind_text_and_style(): void
     {
         ['style' => $style] = $this->seedLibrary();
-        Sanctum::actingAs(User::factory()->create());
 
         $this->getJson('/api/images?kind=reference')->assertJsonPath('meta.total', 2);
         $this->getJson('/api/images?kind=person')->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.slug', 'gropius');
@@ -58,15 +57,16 @@ class ImageLibraryApiTest extends TestCase
         $this->getJson('/api/images?style=nao-existe')->assertJsonPath('meta.total', 0);
     }
 
-    public function test_mine_filter_only_returns_the_users_own_items(): void
+    public function test_library_only_returns_the_users_own_images(): void
     {
         ['owner' => $owner] = $this->seedLibrary();
 
         Sanctum::actingAs(User::factory()->create());
-        $this->getJson('/api/images?mine=1')->assertJsonPath('meta.total', 0);
+        $this->getJson('/api/images')->assertJsonPath('meta.total', 0);
+        $this->getJson('/api/images?q=Cartaz')->assertJsonPath('meta.total', 0);
 
         Sanctum::actingAs($owner);
-        $this->getJson('/api/images?mine=1')->assertJsonPath('meta.total', 5);
+        $this->getJson('/api/images')->assertJsonPath('meta.total', 5);
     }
 
     public function test_pagination_and_per_page_limit(): void
@@ -96,7 +96,7 @@ class ImageLibraryApiTest extends TestCase
             ->assertJsonCount(1, 'data.links');
     }
 
-    public function test_links_require_owning_both_the_reference_and_the_entity(): void
+    public function test_links_only_work_between_the_users_own_reference_and_entity(): void
     {
         ['owner' => $owner, 'reference' => $reference] = $this->seedLibrary();
         $intruder = User::factory()->create();
@@ -104,11 +104,11 @@ class ImageLibraryApiTest extends TestCase
         $ownStyle = Style::factory()->for($owner, 'owner')->create();
 
         Sanctum::actingAs($intruder);
-        $this->postJson("/api/references/{$reference->id}/links", ['type' => 'style', 'slug' => $theirStyle->slug])->assertForbidden();
-        $this->deleteJson("/api/references/{$reference->id}/links/style/{$ownStyle->slug}")->assertForbidden();
+        $this->postJson("/api/references/{$reference->id}/links", ['type' => 'style', 'slug' => $theirStyle->slug])->assertNotFound();
+        $this->deleteJson("/api/references/{$reference->id}/links/style/{$ownStyle->slug}")->assertNotFound();
 
         Sanctum::actingAs($owner);
-        $this->postJson("/api/references/{$reference->id}/links", ['type' => 'style', 'slug' => $theirStyle->slug])->assertForbidden();
+        $this->postJson("/api/references/{$reference->id}/links", ['type' => 'style', 'slug' => $theirStyle->slug])->assertNotFound();
         $this->postJson("/api/references/{$reference->id}/links", ['type' => 'reference', 'slug' => '1'])->assertUnprocessable();
     }
 
@@ -117,7 +117,6 @@ class ImageLibraryApiTest extends TestCase
         ['owner' => $owner, 'person' => $person, 'strategy' => $strategy, 'reference' => $reference, 'style' => $style] = $this->seedLibrary();
         $person->references()->attach($reference);
         $strategy->references()->attach($owner->referenceItems()->create(['title' => 'Da estratégia', 'image_url' => 'https://example.com/s.jpg']));
-        Sanctum::actingAs(User::factory()->create());
 
         $this->getJson("/api/images?person={$person->slug}")->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.title', 'Cartaz');
         $this->getJson("/api/images?strategy={$strategy->slug}")->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.title', 'Da estratégia');
@@ -128,11 +127,10 @@ class ImageLibraryApiTest extends TestCase
 
     public function test_references_carry_their_own_tags_and_entities_their_main_ones(): void
     {
-        ['style' => $style, 'reference' => $reference] = $this->seedLibrary();
-        $tags = collect(['Alfa', 'Beta', 'Gama', 'Delta'])->map(fn ($name) => Tag::create(['name' => $name]));
+        ['owner' => $owner, 'style' => $style, 'reference' => $reference] = $this->seedLibrary();
+        $tags = collect(['Alfa', 'Beta', 'Gama', 'Delta'])->map(fn ($name) => $this->tagFor($owner, $name));
         $style->tags()->attach($tags->pluck('id'));
         $reference->tags()->attach([$tags[3]->id, $tags[1]->id]);
-        Sanctum::actingAs(User::factory()->create());
 
         $data = collect($this->getJson('/api/images')->json('data'));
 
@@ -143,11 +141,10 @@ class ImageLibraryApiTest extends TestCase
 
     public function test_library_can_be_filtered_by_tag_across_references_and_entities(): void
     {
-        ['style' => $style, 'reference' => $reference] = $this->seedLibrary();
-        $tag = Tag::create(['name' => 'Cartaz']);
+        ['owner' => $owner, 'style' => $style, 'reference' => $reference] = $this->seedLibrary();
+        $tag = $this->tagFor($owner, 'Cartaz');
         $reference->tags()->attach($tag);
         $style->tags()->attach($tag);
-        Sanctum::actingAs(User::factory()->create());
 
         $response = $this->getJson("/api/images?tag={$tag->slug}")->assertJsonPath('meta.total', 2);
         $this->assertEqualsCanonicalizing(['reference', 'style'], collect($response->json('data'))->pluck('kind')->all());
@@ -157,10 +154,9 @@ class ImageLibraryApiTest extends TestCase
     public function test_library_search_matches_tags_linked_names_and_source(): void
     {
         ['owner' => $owner, 'reference' => $reference] = $this->seedLibrary();
-        $tag = Tag::create(['name' => 'Tipografia suíça']);
+        $tag = $this->tagFor($owner, 'Tipografia suíça');
         $reference->tags()->attach($tag);
         $reference->update(['source_url' => 'https://museu.example.com/acervo']);
-        Sanctum::actingAs(User::factory()->create());
 
         $this->getJson('/api/images?kind=reference&q=suíça')->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.title', 'Cartaz');
         $this->getJson('/api/images?kind=reference&q=Bauhaus')->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.title', 'Cartaz');
@@ -171,12 +167,10 @@ class ImageLibraryApiTest extends TestCase
     public function test_library_can_be_sorted_and_limited_to_one_of_the_users_groups(): void
     {
         ['owner' => $owner, 'reference' => $reference, 'outra' => $outra, 'style' => $style] = $this->seedLibrary();
-        $viewer = User::factory()->create();
-        $group = $viewer->groups()->create(['name' => 'Estudar depois']);
+        $group = $owner->groups()->create(['name' => 'Estudar depois']);
         $group->items()->create(['groupable_type' => 'reference', 'groupable_id' => $outra->id]);
         $group->items()->create(['groupable_type' => 'style', 'groupable_id' => $style->id]);
-        $foreign = $owner->groups()->create(['name' => 'De outro']);
-        Sanctum::actingAs($viewer);
+        $foreign = User::factory()->create()->groups()->create(['name' => 'De outro']);
 
         $this->getJson("/api/images?group={$group->id}")->assertJsonPath('meta.total', 2);
         $this->getJson("/api/images?group={$group->id}&kind=reference")->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.title', 'Solta');

@@ -16,8 +16,9 @@ class PersonAndStrategyApiTest extends TestCase
 
     public function test_user_can_create_person_linked_to_styles(): void
     {
-        $style = Style::factory()->create();
-        Sanctum::actingAs(User::factory()->create());
+        $user = User::factory()->create();
+        $style = Style::factory()->for($user, 'owner')->create();
+        Sanctum::actingAs($user);
 
         $this->postJson('/api/people', ['name' => 'Anni Albers', 'styles' => [$style->slug]])
             ->assertCreated()
@@ -36,13 +37,24 @@ class PersonAndStrategyApiTest extends TestCase
             ->assertJsonValidationErrors(['styles.0', 'tags.0']);
     }
 
-    public function test_only_owner_can_change_person(): void
+    public function test_person_cannot_be_linked_to_a_style_of_another_account(): void
+    {
+        $foreign = Style::factory()->create();
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->postJson('/api/people', ['name' => 'X', 'styles' => [$foreign->slug]])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('styles.0');
+    }
+
+    public function test_only_owner_can_see_and_change_person(): void
     {
         $person = Person::factory()->create();
         Sanctum::actingAs(User::factory()->create());
 
-        $this->putJson("/api/people/{$person->slug}", ['name' => 'Hack'])->assertForbidden();
-        $this->deleteJson("/api/people/{$person->slug}")->assertForbidden();
+        $this->getJson("/api/people/{$person->slug}")->assertNotFound();
+        $this->putJson("/api/people/{$person->slug}", ['name' => 'Hack'])->assertNotFound();
+        $this->deleteJson("/api/people/{$person->slug}")->assertNotFound();
 
         Sanctum::actingAs($person->owner);
         $this->putJson("/api/people/{$person->slug}", ['name' => 'Novo Nome'])->assertOk();
@@ -54,28 +66,31 @@ class PersonAndStrategyApiTest extends TestCase
         $strategy = Strategy::factory()->create();
         Sanctum::actingAs(User::factory()->create());
 
-        $this->getJson('/api/strategies')->assertOk()->assertJsonCount(1, 'data');
+        $this->getJson('/api/strategies')->assertOk()->assertJsonCount(0, 'data');
         $this->postJson('/api/strategies', ['name' => 'Grade modular'])->assertCreated();
-        $this->putJson("/api/strategies/{$strategy->slug}", ['name' => 'Hack'])->assertForbidden();
-        $this->deleteJson("/api/strategies/{$strategy->slug}")->assertForbidden();
+        $this->getJson('/api/strategies')->assertOk()->assertJsonCount(1, 'data');
+        $this->putJson("/api/strategies/{$strategy->slug}", ['name' => 'Hack'])->assertNotFound();
+        $this->deleteJson("/api/strategies/{$strategy->slug}")->assertNotFound();
     }
 
     public function test_search_filters_people(): void
     {
-        Person::factory()->create(['name' => 'Dieter Rams']);
-        Person::factory()->create(['name' => 'Paula Scher']);
-        Sanctum::actingAs(User::factory()->create());
+        $user = User::factory()->create();
+        Person::factory()->for($user, 'owner')->create(['name' => 'Dieter Rams']);
+        Person::factory()->for($user, 'owner')->create(['name' => 'Paula Scher']);
+        Sanctum::actingAs($user);
 
         $this->getJson('/api/people?q=rams')->assertJsonCount(1, 'data');
     }
 
     public function test_search_matches_secondary_fields(): void
     {
-        Style::factory()->create(['name' => 'Alfa', 'period' => '1919 - 1933', 'origin' => 'Alemanha']);
-        Style::factory()->create(['name' => 'Beta', 'period' => '2000', 'origin' => 'Japão']);
-        Person::factory()->create(['name' => 'Gama', 'role' => 'Arquiteta']);
-        Strategy::factory()->create(['name' => 'Delta', 'category' => 'Metodologia']);
-        Sanctum::actingAs(User::factory()->create());
+        $user = User::factory()->create();
+        Style::factory()->for($user, 'owner')->create(['name' => 'Alfa', 'period' => '1919 - 1933', 'origin' => 'Alemanha']);
+        Style::factory()->for($user, 'owner')->create(['name' => 'Beta', 'period' => '2000', 'origin' => 'Japão']);
+        Person::factory()->for($user, 'owner')->create(['name' => 'Gama', 'role' => 'Arquiteta']);
+        Strategy::factory()->for($user, 'owner')->create(['name' => 'Delta', 'category' => 'Metodologia']);
+        Sanctum::actingAs($user);
 
         $this->getJson('/api/styles?q=1919')->assertJsonCount(1, 'data')->assertJsonPath('data.0.name', 'Alfa');
         $this->getJson('/api/styles?q=Jap')->assertJsonCount(1, 'data')->assertJsonPath('data.0.name', 'Beta');
@@ -95,9 +110,10 @@ class PersonAndStrategyApiTest extends TestCase
 
     public function test_search_treats_wildcards_literally(): void
     {
-        Person::factory()->create(['name' => 'Ana 100%']);
-        Person::factory()->create(['name' => 'Bruno']);
-        Sanctum::actingAs(User::factory()->create());
+        $user = User::factory()->create();
+        Person::factory()->for($user, 'owner')->create(['name' => 'Ana 100%']);
+        Person::factory()->for($user, 'owner')->create(['name' => 'Bruno']);
+        Sanctum::actingAs($user);
 
         $this->getJson('/api/people?q=%25')->assertJsonCount(1, 'data')->assertJsonPath('data.0.name', 'Ana 100%');
         $this->getJson('/api/people?q=_')->assertJsonCount(0, 'data');

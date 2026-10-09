@@ -9,17 +9,17 @@ trait HasUniqueSlug
     protected static function bootHasUniqueSlug(): void
     {
         static::creating(function ($model) {
-            $model->slug = static::uniqueSlug($model->name);
+            $model->slug = static::uniqueSlug($model->name, $model->user_id);
         });
     }
 
-    public static function uniqueSlug(string $name): string
+    public static function uniqueSlug(string $name, ?int $userId): string
     {
         $base = Str::slug($name) ?: 'item';
         $slug = $base;
         $suffix = 2;
 
-        while (static::where('slug', $slug)->exists()) {
+        while (static::withoutGlobalScopes()->where('user_id', $userId)->where('slug', $slug)->exists()) {
             $slug = "{$base}-{$suffix}";
             $suffix++;
         }

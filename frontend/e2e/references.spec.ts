@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import path from "node:path";
-import { chooseMenuAction, createApiSession, register, uniqueName } from "./helpers";
+import { chooseMenuAction, createApiSession, loginAsDemo, register, signInAs, uniqueName } from "./helpers";
 
 const image = path.join(__dirname, "fixtures", "pixel.png");
 
@@ -18,7 +18,7 @@ test("biblioteca: criar por modal com upload e vínculo, editar, agrupar e remov
 
   const title = uniqueName("Ref");
   await page.goto("/referencias");
-  await page.getByRole("button", { name: "Nova referência" }).click();
+  await page.getByRole("button", { name: "Nova referência" }).first().click();
   const modal = page.getByRole("dialog", { name: "Adicionar referência" });
   await modal.getByLabel("Título").fill(title);
   await modal.getByLabel("Descrição (opcional)").fill("Uma pequena descrição");
@@ -61,7 +61,7 @@ test("biblioteca: criar por modal com upload e vínculo, editar, agrupar e remov
 test("modal recusa imagem ausente e arquivo inválido, e mantém o digitado", async ({ page }) => {
   await register(page);
   await page.goto("/referencias");
-  await page.getByRole("button", { name: "Nova referência" }).click();
+  await page.getByRole("button", { name: "Nova referência" }).first().click();
   const modal = page.getByRole("dialog", { name: "Adicionar referência" });
   const title = uniqueName("Sem imagem");
   await modal.getByLabel("Título").fill(title);
@@ -108,8 +108,8 @@ test("vincular a mesma imagem a mais de um estilo", async ({ page }) => {
   await expect(lightbox.getByRole("link", { name: second })).toBeVisible();
 });
 
-test("filtros da biblioteca: origem, estilo e só o que criei", async ({ page }) => {
-  await register(page);
+test("filtros da biblioteca: origem, estilo e chips dos filtros ativos", async ({ page }) => {
+  await loginAsDemo(page);
   await page.goto("/referencias?q=Vaporwave");
   await expect(page.getByRole("button", { name: "Ampliar Composição: Vaporwave" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Ampliar Vaporwave" })).toBeVisible();
@@ -128,14 +128,14 @@ test("filtros da biblioteca: origem, estilo e só o que criei", async ({ page })
   await expect(page.getByRole("button", { name: "Ampliar Composição: Bauhaus" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Ampliar Composição: Y2K" })).toHaveCount(0);
 
-  await page.goto("/referencias?mine=1");
-  await expect(page.getByRole("heading", { name: "Nenhuma imagem com esses filtros." })).toBeVisible();
+  await page.goto("/referencias?q=zzz-inexistente");
+  await expect(page.getByRole("heading", { name: /Nada encontrado para/ })).toBeVisible();
   await page.goto("/referencias?q=Brutalismo");
   await expect(page.getByRole("button", { name: /Ampliar/ })).toHaveCount(2);
 });
 
 test("lightbox de capa de estilo leva à página do estilo", async ({ page }) => {
-  await register(page);
+  await loginAsDemo(page);
   await page.goto("/referencias?kind=style&q=Bauhaus");
   await page.getByRole("button", { name: "Ampliar Bauhaus" }).click();
   await page.getByRole("dialog", { name: "Bauhaus" }).getByRole("link", { name: "Abrir estilo" }).click();
@@ -160,7 +160,7 @@ test("upload de capa em estilo próprio e remoção", async ({ page }) => {
 });
 
 test("lightbox navega entre as imagens com botões e com as setas do teclado", async ({ page }) => {
-  await register(page);
+  await loginAsDemo(page);
   await page.goto("/referencias?kind=style");
   await page.waitForLoadState("networkidle");
   const buttons = page.getByRole("button", { name: /^Ampliar / });
@@ -186,7 +186,7 @@ test("lightbox navega entre as imagens com botões e com as setas do teclado", a
 });
 
 test("cartão mostra o contexto da imagem e a página da referência mostra tags e conexões", async ({ page }) => {
-  await register(page);
+  await loginAsDemo(page);
   await page.goto("/referencias?q=Composição: Bauhaus");
   const card = page.getByRole("article").filter({ has: page.getByRole("button", { name: "Ampliar Composição: Bauhaus" }) });
   await expect(card.getByText("Bauhaus", { exact: true }).first()).toBeVisible();
@@ -206,7 +206,7 @@ test("tags próprias da imagem: escolher ao criar, filtrar a biblioteca e editar
   const { slug } = (await (await api.post("/tags", { name: tagName })).json()).data;
   await api.post("/tags", { name: otherName });
 
-  await register(page);
+  await signInAs(page, api);
   const title = uniqueName("Ref com tag");
   await page.goto("/referencias?nova=1");
   const modal = page.getByRole("dialog", { name: "Adicionar referência" });
@@ -375,7 +375,7 @@ test("página da referência mostra de onde ela faz parte e sugere outras do mes
     await api.post("/references", { title, image_url: "https://picsum.photos/seed/prisma/400/300", links: [{ type: "style", slug }] });
   }
 
-  await register(page);
+  await signInAs(page, api);
   await page.goto(`/referencias?q=${encodeURIComponent(titles[0])}`);
   await page.getByRole("article").getByRole("link", { name: titles[0] }).click();
   await expect(page.getByRole("heading", { level: 1, name: titles[0] })).toBeVisible();

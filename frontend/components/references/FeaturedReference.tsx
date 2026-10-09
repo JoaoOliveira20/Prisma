@@ -34,7 +34,7 @@ export function FeaturedReference({ item }: { item: GalleryItem }) {
             {links.slice(0, 4).map((link, index) => (
               <span key={`${link.type}-${link.slug}`}>
                 {index > 0 && ", "}
-                <Link href={`${contentPaths[link.type]}/${link.slug}`} className="text-text underline-offset-4 hover:underline">{link.name}</Link>
+                <Link href={`${contentPaths[link.type]}/${link.slug}`} className="text-text underline decoration-border-strong underline-offset-4 hover:decoration-text">{link.name}</Link>
               </span>
             ))}
           </p>

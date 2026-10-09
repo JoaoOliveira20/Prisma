@@ -82,10 +82,10 @@ class PersonSeeder extends Seeder
             $styleNames = $data['styles'];
             unset($data['tags'], $data['styles']);
 
-            $person = Person::where('name', $data['name'])->first() ?? $owner->people()->create($data);
+            $person = Person::where('user_id', $owner->id)->where('name', $data['name'])->first() ?? $owner->people()->create($data);
 
-            $person->tags()->sync(Tag::whereIn('slug', $tagSlugs)->pluck('id'));
-            $person->styles()->sync(Style::whereIn('name', $styleNames)->pluck('id'));
+            $person->tags()->sync(Tag::where('user_id', $owner->id)->whereIn('slug', $tagSlugs)->pluck('id'));
+            $person->styles()->sync(Style::where('user_id', $owner->id)->whereIn('name', $styleNames)->pluck('id'));
         }
     }
 }

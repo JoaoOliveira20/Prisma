@@ -34,7 +34,6 @@ class ImageController extends Controller
             'tag' => ['nullable', 'string', 'max:120'],
             'person' => ['nullable', 'string', 'max:255'],
             'strategy' => ['nullable', 'string', 'max:255'],
-            'mine' => ['nullable', 'boolean'],
             'group' => ['nullable', 'integer'],
             'sort' => ['nullable', 'in:recent,oldest'],
             'per_page' => ['nullable', 'integer', 'between:1,100'],
@@ -105,7 +104,7 @@ class ImageController extends Controller
     {
         return DB::table('reference_items')
             ->selectRaw("'reference' as kind, id, null as slug, title, description, image_url, image_path, created_at")
-            ->when($request->boolean('mine'), fn (Builder $query) => $query->where('user_id', $request->user()->id))
+            ->where('user_id', $request->user()->id)
             ->tap(function (Builder $query) use ($owners) {
                 foreach ($owners as $owner) {
                     $query->whereIn('id', DB::table('referenceables')
@@ -117,28 +116,30 @@ class ImageController extends Controller
             ->when($request->tag, fn (Builder $query, $tag) => $query->whereIn('id', DB::table('reference_item_tag')
                 ->join('tags', 'tags.id', '=', 'reference_item_tag.tag_id')
                 ->where('tags.slug', $tag)
+                ->where('tags.user_id', $request->user()->id)
                 ->select('reference_item_id')))
-            ->when($request->q, fn (Builder $query, $term) => $this->matchingReference($query, $term));
+            ->when($request->q, fn (Builder $query, $term) => $this->matchingReference($query, $term, $request->user()->id));
     }
 
-    private function matchingReference(Builder $query, string $term): void
+    private function matchingReference(Builder $query, string $term, int $userId): void
     {
         $pattern = '%'.preg_replace('/[!%_]/', '!$0', $term).'%';
 
-        $query->where(function (Builder $query) use ($pattern) {
+        $query->where(function (Builder $query) use ($pattern, $userId) {
             foreach (['title', 'description', 'credit', 'source_url'] as $column) {
                 $query->orWhereRaw("{$column} like ? escape '!'", [$pattern]);
             }
 
             $query->orWhereIn('id', DB::table('reference_item_tag')
                 ->join('tags', 'tags.id', '=', 'reference_item_tag.tag_id')
+                ->where('tags.user_id', $userId)
                 ->whereRaw("tags.name like ? escape '!'", [$pattern])
                 ->select('reference_item_id'));
 
             foreach (['style' => 'styles', 'person' => 'people', 'strategy' => 'strategies'] as $type => $table) {
                 $query->orWhereIn('id', DB::table('referenceables')
                     ->where('referenceable_type', $type)
-                    ->whereIn('referenceable_id', DB::table($table)->whereRaw("name like ? escape '!'", [$pattern])->select('id'))
+                    ->whereIn('referenceable_id', DB::table($table)->where('user_id', $userId)->whereRaw("name like ? escape '!'", [$pattern])->select('id'))
                     ->select('reference_item_id'));
             }
         });
@@ -151,11 +152,12 @@ class ImageController extends Controller
         return DB::table($source['table'])
             ->selectRaw("'{$kind}' as kind, id, slug, {$source['title']} as title, {$source['description']} as description, {$source['url']} as image_url, image_path, created_at")
             ->where(fn (Builder $query) => $query->whereNotNull($source['url'])->orWhereNotNull('image_path'))
-            ->when($request->boolean('mine'), fn (Builder $query) => $query->where('user_id', $request->user()->id))
+            ->where('user_id', $request->user()->id)
             ->when($style, fn (Builder $query) => $this->relatedToStyle($query, $kind, $style))
             ->when($request->tag, fn (Builder $query, $tag) => $query->whereIn('id', DB::table("{$kind}_tag")
                 ->join('tags', 'tags.id', '=', "{$kind}_tag.tag_id")
                 ->where('tags.slug', $tag)
+                ->where('tags.user_id', $request->user()->id)
                 ->select("{$kind}_tag.{$kind}_id")))
             ->when($request->q, fn (Builder $query, $term) => $this->matching($query, $term, [$source['title'], $source['description']]));
     }

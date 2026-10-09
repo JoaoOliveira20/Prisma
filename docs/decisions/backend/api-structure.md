@@ -1,6 +1,6 @@
 # Estrutura da API
 
-**Situação:** implementada. Base: `{API_URL}` = `/api`. Rotas em `backend/routes/api.php`.
+**Situação:** implementada. Base: `{API_URL}` = `/api`. Rotas em `backend/routes/api.php`, organizadas por `Route::prefix(...)` (um bloco por recurso, com rotas explícitas; `/auth` pública com `throttle:auth` e o restante dentro de `auth:sanctum`). Os nomes `tags.*` são mantidos porque o `TagResource` usa `routeIs('tags.*')`. Atualização é só `PUT` (o `PATCH` que o `apiResource` criava não era usado).
 
 ## Convenções
 
@@ -28,7 +28,7 @@ Todos exigem autenticação, exceto os dois primeiros.
 | `GET references/{id}` | Além dos dados, traz `created_at` e `related` (até 8 referências que compartilham vínculos ou tags, ordenadas por quantos compartilham) |
 | `POST references/links` | Vincula várias referências (`references[]`, até 100) a **uma** entidade (`type`, `slug`) sem remover outros vínculos; exige ser dono de todas as referências e da entidade (403) e que os ids existam (404) |
 | `POST references/{id}/links`, `DELETE references/{id}/links/{type}/{slug}` | Vincula/desvincula **uma** entidade sem alterar as demais (exige ser dono da referência e da entidade) |
-| `GET images` | Biblioteca unificada: referências + capas de estilos/estratégias + fotos de pessoas ([ADR-012](../adr/ADR-012-unified-image-library.md)). Filtros: `kind` (reference/style/person/strategy), `q` (título, descrição, crédito, fonte, nomes das tags e dos estilos/pessoas/estratégias vinculados), `style` (slug), `person` e `strategy` (slugs; restringem a referências vinculadas), `group` (id de grupo do próprio usuário; Favoritos incluído), `sort=recent\|oldest`, `mine=1`, `per_page` (48 por padrão, máx. 100). Resposta `{ data, meta }`; `tag` (slug) filtra referências pelas tags próprias e capas/fotos pelas tags do conteúdo; cada item traz `tags` (referências: todas as próprias; capas e fotos: até 3 do conteúdo); cada item tem `key`, `kind`, `slug`, `title`, `description`, `image_url`, `can` e, para referências, `links`, `is_favorite`, `group_ids` |
+| `GET images` | Biblioteca unificada **da conta**: referências + capas de estilos/estratégias + fotos de pessoas ([ADR-012](../adr/ADR-012-unified-image-library.md)). Filtros: `kind` (reference/style/person/strategy), `q` (título, descrição, crédito, fonte, nomes das tags e dos estilos/pessoas/estratégias vinculados), `style` (slug), `person` e `strategy` (slugs; restringem a referências vinculadas), `group` (id de grupo do próprio usuário; Favoritos incluído), `sort=recent\|oldest`, `per_page` (48 por padrão, máx. 100). Resposta `{ data, meta }`; `tag` (slug) filtra referências pelas tags próprias e capas/fotos pelas tags do conteúdo; cada item traz `tags` (referências: todas as próprias; capas e fotos: até 3 do conteúdo); cada item tem `key`, `kind`, `slug`, `title`, `description`, `image_url`, `can` e, para referências, `links`, `is_favorite`, `group_ids` |
 | `GET/POST groups`, `GET/PUT/DELETE groups/{id}` | Grupos; `GET groups/{id}` traz os itens por tipo |
 | `POST groups/{id}/items`, `DELETE groups/{id}/items/{type}/{slug}` | Adicionar/remover item (`type` ∈ style, person, strategy, reference) |
 | `POST/DELETE favorites/{type}/{slug}` | Atalho para o grupo Favoritos (`type` ∈ style, person, strategy, reference; para `reference`, `slug` é o id) |

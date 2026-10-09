@@ -20,7 +20,7 @@ class ReferenceSeeder extends Seeder
         foreach (Style::where('user_id', $owner->id)->get() as $style) {
             $title = "Composição: {$style->name}";
 
-            if (ReferenceItem::where('title', $title)->exists()) {
+            if (ReferenceItem::where('user_id', $owner->id)->where('title', $title)->exists()) {
                 continue;
             }
 

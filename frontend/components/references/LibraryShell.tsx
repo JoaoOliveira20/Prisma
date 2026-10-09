@@ -74,14 +74,13 @@ export function LibraryShell({ options, children }: LibraryShellProps) {
     const label = options[key].find((option) => option.value === value)?.label;
     return value ? [{ key, value, label: label ?? value }] : [];
   });
-  const mine = params.get("mine") === "1";
   const kind = params.get("kind") ?? "";
   const contextual = Boolean(params.get("person") || params.get("strategy"));
-  const activeCount = activeFilters.length + (mine ? 1 : 0);
+  const activeCount = activeFilters.length;
   const clearAll = () => {
     appliedQuery.current = "";
     setQuery("");
-    apply({ q: undefined, kind: undefined, mine: undefined, ...Object.fromEntries(filterKeys.map((key) => [key, undefined])) });
+    apply({ q: undefined, kind: undefined, ...Object.fromEntries(filterKeys.map((key) => [key, undefined])) });
   };
   const hasAnything = Boolean(query || kind || activeCount);
 
@@ -159,10 +158,6 @@ export function LibraryShell({ options, children }: LibraryShellProps) {
                   </select>
                 </div>
               ))}
-              <label className="flex h-11 items-center gap-2 self-end text-sm">
-                <input type="checkbox" checked={mine} onChange={(event) => apply({ mine: event.target.checked ? "1" : undefined })} />
-                Só o que eu criei
-              </label>
             </div>
           </div>
         </div>
@@ -186,7 +181,7 @@ export function LibraryShell({ options, children }: LibraryShellProps) {
           </nav>
         )}
 
-        {(activeFilters.length > 0 || mine || hasAnything) && (
+        {(activeFilters.length > 0 || hasAnything) && (
           <ul aria-label="Filtros ativos" className="mt-4 flex flex-wrap items-center gap-2">
             {activeFilters.map((filter) => (
               <li key={filter.key} className="results-in">
@@ -202,13 +197,6 @@ export function LibraryShell({ options, children }: LibraryShellProps) {
                 </button>
               </li>
             ))}
-            {mine && (
-              <li className="results-in">
-                <button type="button" onClick={() => apply({ mine: undefined })} aria-label="Remover filtro: só o que eu criei" className="flex items-center gap-2 border border-border-strong py-1 pl-3 pr-2 text-xs transition-colors hover:bg-surface">
-                  Só o que eu criei <span aria-hidden="true">×</span>
-                </button>
-              </li>
-            )}
             {hasAnything && (
               <li>
                 <button type="button" onClick={clearAll} className="nav-link ml-2 text-sm text-text-muted hover:text-text">

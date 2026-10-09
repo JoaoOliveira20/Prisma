@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { register, uniqueName } from "./helpers";
+import { loginAsDemo, register, uniqueName } from "./helpers";
 
 const tagRow = (page: import("@playwright/test").Page, name: string) =>
   page.getByRole("listitem").filter({ has: page.getByRole("heading", { level: 2, name, exact: true }) });
@@ -24,9 +24,7 @@ test("gestão de tags: criar, duplicar, renomear, usar e excluir", async ({ page
   await page.getByRole("button", { name: "Salvar" }).click();
   await expect(tagRow(page, renamed)).toBeVisible();
 
-  const system = tagRow(page, "Arquitetura");
-  await expect(system.getByText("somente leitura")).toBeVisible();
-  await expect(system.getByRole("button", { name: "Renomear" })).toHaveCount(0);
+  await expect(tagRow(page, "Arquitetura")).toHaveCount(0);
 
   const styleName = uniqueName("Estilo Tag");
   await page.goto("/estilos/novo");
@@ -81,7 +79,7 @@ test("tag sem uso pode ser excluída", async ({ page }) => {
 });
 
 test("pesquisa global agrupa por tipo e navega com teclado", async ({ page }) => {
-  await register(page);
+  await loginAsDemo(page);
   await page.goto("/explorar");
   await page.waitForLoadState("networkidle");
   await page.keyboard.press("Control+k");

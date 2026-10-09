@@ -1,7 +1,7 @@
 # ADR-010: Tags controladas com dono
 
 -   **Data:** 2026-10-08
--   **Status:** aceita
+-   **Status:** aceita (a parte de tags visíveis a todos foi substituída pelo [ADR-018](ADR-018-private-workspace-per-account.md): tags são por conta)
 
 ## Contexto
 

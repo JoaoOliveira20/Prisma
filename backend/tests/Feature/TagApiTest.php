@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Style;
-use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -27,48 +26,44 @@ class TagApiTest extends TestCase
         $this->assertDatabaseHas('tags', ['slug' => 'surrealismo', 'user_id' => $user->id]);
     }
 
-    public function test_duplicate_or_empty_names_are_rejected(): void
+    public function test_duplicate_or_empty_names_are_rejected_only_within_the_same_account(): void
     {
-        Tag::create(['name' => 'Design']);
-        Sanctum::actingAs(User::factory()->create());
+        $user = User::factory()->create();
+        $this->tagFor($user, 'Design');
+        $this->tagFor(User::factory()->create(), 'Arte');
+        Sanctum::actingAs($user);
 
         $this->postJson('/api/tags', ['name' => 'Design'])->assertUnprocessable()->assertJsonValidationErrors('name');
         $this->postJson('/api/tags', ['name' => ''])->assertUnprocessable()->assertJsonValidationErrors('name');
         $this->postJson('/api/tags', ['name' => str_repeat('a', 41)])->assertUnprocessable();
+        $this->postJson('/api/tags', ['name' => 'Arte'])->assertCreated()->assertJsonPath('data.slug', 'arte');
     }
 
-    public function test_listing_shows_usage_and_permissions(): void
+    public function test_listing_shows_only_own_tags_with_usage(): void
     {
         $user = User::factory()->create();
-        $mine = Tag::make(['name' => 'Minha']);
-        $mine->user_id = $user->id;
-        $mine->save();
-        Tag::create(['name' => 'Sistema']);
-        $style = Style::factory()->create();
+        $mine = $this->tagFor($user, 'Minha');
+        $this->tagFor(User::factory()->create(), 'De outra pessoa');
+        $style = Style::factory()->for($user, 'owner')->create();
         $style->tags()->attach($mine);
         Sanctum::actingAs($user);
 
-        $response = $this->getJson('/api/tags')->assertOk();
-        $this->assertSame(1, collect($response->json('data'))->firstWhere('slug', 'minha')['usage_count']);
-        $this->assertFalse(collect($response->json('data'))->firstWhere('slug', 'sistema')['can']['update']);
-        $this->getJson('/api/tags?q=sist')->assertJsonCount(1, 'data');
+        $response = $this->getJson('/api/tags')->assertOk()->assertJsonCount(1, 'data');
+        $this->assertSame(1, $response->json('data.0.usage_count'));
+        $this->assertTrue($response->json('data.0.can.update'));
+        $this->getJson('/api/tags?q=outra')->assertJsonCount(0, 'data');
     }
 
-    public function test_only_owner_can_rename_and_delete_and_system_tags_are_locked(): void
+    public function test_other_accounts_tags_cannot_be_renamed_or_deleted_and_own_can(): void
     {
         $owner = User::factory()->create();
-        $tag = Tag::make(['name' => 'Dono']);
-        $tag->user_id = $owner->id;
-        $tag->save();
-        $system = Tag::create(['name' => 'Sistema']);
+        $tag = $this->tagFor($owner, 'Dono');
 
         Sanctum::actingAs(User::factory()->create());
-        $this->putJson("/api/tags/{$tag->slug}", ['name' => 'Hack'])->assertForbidden();
-        $this->deleteJson("/api/tags/{$tag->slug}")->assertForbidden();
+        $this->putJson("/api/tags/{$tag->slug}", ['name' => 'Hack'])->assertNotFound();
+        $this->deleteJson("/api/tags/{$tag->slug}")->assertNotFound();
 
         Sanctum::actingAs($owner);
-        $this->putJson("/api/tags/{$system->slug}", ['name' => 'Hack'])->assertForbidden();
-        $this->deleteJson("/api/tags/{$system->slug}")->assertForbidden();
         $this->putJson("/api/tags/{$tag->slug}", ['name' => 'Novo Nome'])->assertOk()->assertJsonPath('data.name', 'Novo Nome')->assertJsonPath('data.slug', 'dono');
         $this->putJson("/api/tags/{$tag->slug}", ['name' => 'Novo Nome'])->assertOk();
         $this->deleteJson("/api/tags/{$tag->slug}")->assertNoContent();
@@ -77,10 +72,8 @@ class TagApiTest extends TestCase
     public function test_tag_in_use_cannot_be_deleted(): void
     {
         $user = User::factory()->create();
-        $tag = Tag::make(['name' => 'Usada']);
-        $tag->user_id = $user->id;
-        $tag->save();
-        Style::factory()->create()->tags()->attach($tag);
+        $tag = $this->tagFor($user, 'Usada');
+        Style::factory()->for($user, 'owner')->create()->tags()->attach($tag);
         Sanctum::actingAs($user);
 
         $this->deleteJson("/api/tags/{$tag->slug}")

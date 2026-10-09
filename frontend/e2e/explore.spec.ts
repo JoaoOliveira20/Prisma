@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { register } from "./helpers";
+import { loginAsDemo } from "./helpers";
 
 test("explorar mostra todos os tipos de conteúdo em seções, diferente da lista de estilos", async ({ page }) => {
-  await register(page);
+  await loginAsDemo(page);
   await page.goto("/explorar");
   for (const title of ["Estilos", "Imagens", "Pessoas", "Estratégias"]) {
     await expect(page.getByRole("heading", { level: 2, name: new RegExp(`^${title}\\s*\\d+`) })).toBeVisible();
@@ -14,7 +14,7 @@ test("explorar mostra todos os tipos de conteúdo em seções, diferente da list
 });
 
 test("explorar filtra por busca e por tag", async ({ page }) => {
-  await register(page);
+  await loginAsDemo(page);
   await page.goto("/explorar?q=Bauhaus");
   await expect(page.getByRole("heading", { level: 2, name: /^Estilos\s*1$/ })).toBeVisible();
   await expect(page.getByRole("heading", { level: 2, name: /^Pessoas\s*1$/ })).toBeVisible();

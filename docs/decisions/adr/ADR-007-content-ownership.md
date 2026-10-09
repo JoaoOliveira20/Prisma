@@ -1,7 +1,7 @@
 # ADR-007: Leitura para autenticados, escrita só do dono
 
 -   **Data:** 2026-10-08
--   **Status:** aceita
+-   **Status:** substituída pelo [ADR-018](ADR-018-private-workspace-per-account.md) (cada conta passou a ver só os próprios dados)
 
 ## Contexto
 

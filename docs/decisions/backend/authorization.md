@@ -1,18 +1,19 @@
 # Autorização e propriedade
 
-**Situação:** implementada. Decisão: [ADR-007](../adr/ADR-007-content-ownership.md).
+**Situação:** implementada. Decisão vigente: [ADR-018](../adr/ADR-018-private-workspace-per-account.md) (substitui o ADR-007).
 
 ## Regras
 
+Cada conta enxerga e altera **somente os próprios dados** ([ADR-018](../adr/ADR-018-private-workspace-per-account.md)):
+
 | Recurso | Ler | Criar | Editar / excluir |
 | --- | --- | --- | --- |
-| Estilo, Pessoa, Estratégia | qualquer autenticado | qualquer autenticado (vira dono) | só o dono |
-| Referência | qualquer autenticado | autenticado, vinculando só a conteúdos próprios | só o dono |
+| Estilo, Pessoa, Estratégia, Referência, Tag | só o dono (registro de outra conta responde 404) | autenticado (vira dono) | só o dono; tag em uso não exclui |
 | Grupo | só o dono | dono | só o dono, exceto o grupo Favoritos (nunca) |
-| Tags | qualquer autenticado | qualquer autenticado (vira dono) | só o dono; tags de seeder (sem dono) ninguém; tag em uso não exclui ([ADR-010](../adr/ADR-010-owned-controlled-tags.md)) |
 
 ## Implementação
 
+-   **Isolamento por conta:** trait `OwnedByUser` (*global scope* por `user_id` do usuário autenticado) em `Style`, `Person`, `Strategy`, `ReferenceItem`, `Tag` e `Group`. Consultas cruas (`GET /images`) filtram `user_id` à mão. Fora de requisições autenticadas (seeders, console) o escopo não existe, então esses códigos filtram por dono explicitamente.
 -   Policies em `app/Policies/` (`StylePolicy`, `PersonPolicy`, `StrategyPolicy`, `ReferenceItemPolicy`, `GroupPolicy`, `TagPolicy`), descobertas por convenção de nome.
 -   Controllers chamam `$this->authorize(...)`; o trait `AuthorizesRequests` foi adicionado ao `Controller` base porque o Laravel 13 não o inclui.
 -   O dono vem sempre do usuário autenticado (`$request->user()->styles()->create(...)`). Nenhum endpoint aceita `user_id` do cliente.
@@ -21,6 +22,6 @@
 
 ## Pontos de atenção
 
--   Vincular uma referência exige `update` sobre **cada** conteúdo vinculado (`ReferenceItemController@store/update`).
--   Pessoas e estratégias aceitam vínculo a **qualquer** estilo existente (apenas valida que o slug existe).
+-   Vínculos só existem dentro da conta: slugs de tags e estilos são validados **na conta** (`Rule::exists(...)->where('user_id', …)`), e o `GroupItem::resolveGroupable` só encontra registros do usuário.
+-   Como o escopo vale também para quem tem Policy, o caminho normal para registro alheio é 404; 403 só aparece em regras como "Favoritos não pode ser renomeado".
 -   Não há papéis administrativos nem compartilhamento. Introduzi-los exige revisar as Policies e as consultas de listagem.

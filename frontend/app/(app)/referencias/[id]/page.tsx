@@ -98,7 +98,7 @@ export default async function ReferenceDetailPage({ params }: PageProps<"/refere
             {memberships.map((group, index) => (
               <span key={group.id}>
                 {index > 0 && ", "}
-                <Link href={group.is_favorites ? "/favoritos" : `/grupos/${group.id}`} className="text-text underline-offset-4 hover:underline">{group.name}</Link>
+                <Link href={group.is_favorites ? "/favoritos" : `/grupos/${group.id}`} className="text-text underline decoration-border-strong underline-offset-4 hover:decoration-text">{group.name}</Link>
               </span>
             ))}
           </p>

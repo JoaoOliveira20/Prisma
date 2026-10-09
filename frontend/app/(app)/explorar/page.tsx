@@ -34,7 +34,7 @@ export default async function ExplorePage({ searchParams }: PageProps<"/explorar
 
   return (
     <>
-      <PageHeader eyebrow="Arquivo" title="Explorar" lede="Atravesse o acervo: estilos, imagens, pessoas e ideias, do mais recente ao mais antigo." />
+      <PageHeader eyebrow="Arquivo" title="Explorar" lede="Tudo o que está no seu acervo, num só lugar: estilos, imagens, pessoas e ideias, do mais recente ao mais antigo. Abra e vá escolhendo." />
       <div className="page-x space-y-5 border-y border-border py-5">
         <ListSearch basePath="/explorar" query={query} tag={tagFilter} placeholder="Buscar em todo o acervo" withSort={false} />
         <ContentFilters basePath="/explorar" tags={tags} activeTag={tagFilter} query={query} />

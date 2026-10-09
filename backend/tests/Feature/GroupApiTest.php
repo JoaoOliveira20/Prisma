@@ -28,9 +28,9 @@ class GroupApiTest extends TestCase
 
     public function test_favoriting_adds_item_to_favorites_group(): void
     {
-        $style = Style::factory()->create();
-        $person = Person::factory()->create();
         $user = User::factory()->create();
+        $style = Style::factory()->for($user, 'owner')->create();
+        $person = Person::factory()->for($user, 'owner')->create();
         Sanctum::actingAs($user);
 
         $this->postJson("/api/favorites/style/{$style->slug}")->assertOk()->assertJsonPath('is_favorite', true);
@@ -53,8 +53,9 @@ class GroupApiTest extends TestCase
 
     public function test_user_can_create_rename_fill_and_delete_custom_group(): void
     {
-        $style = Style::factory()->create();
-        Sanctum::actingAs(User::factory()->create());
+        $user = User::factory()->create();
+        $style = Style::factory()->for($user, 'owner')->create();
+        Sanctum::actingAs($user);
 
         $id = $this->postJson('/api/groups', ['name' => 'Estudar depois'])->assertCreated()->json('data.id');
         $this->postJson('/api/groups', ['name' => 'Estudar depois'])->assertUnprocessable();
@@ -84,9 +85,9 @@ class GroupApiTest extends TestCase
         $group = User::factory()->create()->groups()->create(['name' => 'Privado']);
         Sanctum::actingAs(User::factory()->create());
 
-        $this->getJson("/api/groups/{$group->id}")->assertForbidden();
-        $this->postJson("/api/groups/{$group->id}/items", ['type' => 'style', 'slug' => $style->slug])->assertForbidden();
-        $this->deleteJson("/api/groups/{$group->id}")->assertForbidden();
+        $this->getJson("/api/groups/{$group->id}")->assertNotFound();
+        $this->postJson("/api/groups/{$group->id}/items", ['type' => 'style', 'slug' => $style->slug])->assertNotFound();
+        $this->deleteJson("/api/groups/{$group->id}")->assertNotFound();
     }
 
     public function test_deleting_content_removes_its_group_items_and_reference_links(): void
@@ -130,7 +131,7 @@ class GroupApiTest extends TestCase
     {
         $user = User::factory()->create();
         $style = Style::factory()->for($user, 'owner')->create();
-        $person = Person::factory()->create();
+        $person = Person::factory()->for($user, 'owner')->create();
         $person->styles()->attach($style);
         $reference = $user->referenceItems()->create(['title' => 'R', 'image_url' => 'https://example.com/r.jpg']);
         $style->references()->attach($reference);
@@ -163,8 +164,8 @@ class GroupApiTest extends TestCase
     public function test_group_list_exposes_preview_images_of_its_items(): void
     {
         $user = User::factory()->create();
-        $withCover = Style::factory()->create(['cover_url' => 'https://example.com/a.jpg']);
-        $withoutImage = Style::factory()->create(['cover_url' => null]);
+        $withCover = Style::factory()->for($user, 'owner')->create(['cover_url' => 'https://example.com/a.jpg']);
+        $withoutImage = Style::factory()->for($user, 'owner')->create(['cover_url' => null]);
         $reference = $user->referenceItems()->create(['title' => 'R', 'image_url' => 'https://example.com/r.jpg']);
         Sanctum::actingAs($user);
         $group = $user->groups()->create(['name' => 'Coleção']);

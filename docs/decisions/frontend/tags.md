@@ -13,7 +13,7 @@ Um **índice tipográfico do vocabulário**, em duas colunas em telas largas, na
 -   Cabeçalho "Vocabulário · Tags" e, numa faixa entre filetes, o formulário "Nova tag" (`CreateTagForm`): nome de até 40 caracteres; erros do servidor junto ao campo; sucesso mostra "Tag criada." e limpa o campo.
 -   Cada tag é uma linha (`TagRow`) com o nome em serifa grande, "N conteúdos" e atalhos "Estilos / Pessoas / Estratégias" (a listagem filtrada por aquela tag, `?tag=slug`).
 -   Para tags **do próprio usuário**: ações em texto **Renomear** (troca o nome por um campo inline com Salvar/Cancelar) e **Excluir** (confirmação em modal; **desabilitado** quando a tag está em uso, e a API também recusa com 409).
--   Tags do sistema (criadas pelo seeder) e de outros usuários mostram "somente leitura" e não têm ações.
+-   As tags são **da conta**: cada usuário vê e gerencia só as suas. Conta nova começa sem tags e a tela explica isso.
 -   Item "Tags" no grupo "Dimensões" da sidebar (ADR-017).
 
 ## Uso nos formulários
@@ -28,10 +28,9 @@ A pesquisa global encontra tags pelo nome e leva a `/explorar?tag=slug` (ver [gl
 
 -   Renomear **não muda o slug** (os filtros por URL continuam válidos); só o nome exibido muda.
 -   A unicidade do nome é decidida pelo banco: no MySQL (collation `utf8mb4_0900_ai_ci`) é insensível a maiúsculas **e a acentos** ("Retro" colide com "Retrô"); no SQLite dos testes não é.
--   Qualquer usuário vê todas as tags, mas só o criador altera. O vocabulário é, portanto, **compartilhado entre usuários**.
+-   O vocabulário é **por conta** ([ADR-018](../adr/ADR-018-private-workspace-per-account.md)); o mesmo nome pode existir em contas diferentes.
 
 ## Limitações
 
 -   Sem página própria por tag (o atalho filtra cada tipo de conteúdo separadamente).
 -   Sem mesclar tags nem mover conteúdos entre tags.
--   Tags do sistema não podem ser alteradas por ninguém pela interface (só por seeder/migration).

@@ -9,7 +9,7 @@ class TagPolicy
 {
     public function update(User $user, Tag $tag): bool
     {
-        return $tag->user_id !== null && $user->id === $tag->user_id;
+        return $user->id === $tag->user_id;
     }
 
     public function delete(User $user, Tag $tag): bool

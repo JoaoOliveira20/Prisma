@@ -25,6 +25,21 @@ export async function loginAsDemo(page: Page) {
   await expect(page).toHaveURL("/");
 }
 
+export async function resetDemoFavorites(request: APIRequestContext) {
+  const login = await request.post(`${apiUrl}/auth/login`, { headers: { Accept: "application/json" }, data: { email: "demo@prisma.test", password: "password" } });
+  const { token } = await login.json();
+  const headers = { Accept: "application/json", Authorization: `Bearer ${token}` };
+  await request.delete(`${apiUrl}/favorites/person/dieter-rams`, { headers });
+  const images = await (await request.get(`${apiUrl}/images?kind=reference&per_page=100`, { headers })).json();
+  for (const image of images.data) {
+    await request.delete(`${apiUrl}/favorites/reference/${image.id}`, { headers });
+  }
+}
+
+export async function signInAs(page: Page, session: { token: string }) {
+  await page.context().addCookies([{ name: "prisma_token", value: session.token, url: "http://localhost:3000" }]);
+}
+
 export async function createApiSession(request: APIRequestContext) {
   const response = await request.post(`${apiUrl}/auth/register`, {
     headers: { Accept: "application/json" },

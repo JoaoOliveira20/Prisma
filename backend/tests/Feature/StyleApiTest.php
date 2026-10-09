@@ -19,9 +19,11 @@ class StyleApiTest extends TestCase
 
     public function test_authenticated_user_can_list_and_search_styles(): void
     {
-        Style::factory()->create(['name' => 'Bauhaus']);
-        Style::factory()->create(['name' => 'Vaporwave']);
-        Sanctum::actingAs(User::factory()->create());
+        $user = User::factory()->create();
+        Style::factory()->for($user, 'owner')->create(['name' => 'Bauhaus']);
+        Style::factory()->for($user, 'owner')->create(['name' => 'Vaporwave']);
+        Style::factory()->create(['name' => 'De outra pessoa']);
+        Sanctum::actingAs($user);
 
         $this->getJson('/api/styles')->assertOk()->assertJsonCount(2, 'data');
         $this->getJson('/api/styles?q=bau')->assertOk()->assertJsonCount(1, 'data');
@@ -29,9 +31,10 @@ class StyleApiTest extends TestCase
 
     public function test_styles_can_be_sorted_by_most_recent(): void
     {
-        Style::factory()->create(['name' => 'Alfa']);
-        Style::factory()->create(['name' => 'Zeta']);
-        Sanctum::actingAs(User::factory()->create());
+        $user = User::factory()->create();
+        Style::factory()->for($user, 'owner')->create(['name' => 'Alfa']);
+        Style::factory()->for($user, 'owner')->create(['name' => 'Zeta']);
+        Sanctum::actingAs($user);
 
         $this->getJson('/api/styles?sort=recent')->assertJsonPath('data.0.name', 'Zeta');
         $this->getJson('/api/styles')->assertJsonPath('data.0.name', 'Alfa');
@@ -39,8 +42,10 @@ class StyleApiTest extends TestCase
 
     public function test_user_can_create_style_with_controlled_tags(): void
     {
-        $tag = Tag::create(['name' => 'Design', 'slug' => 'design']);
         $user = User::factory()->create();
+        $tag = Tag::make(['name' => 'Design']);
+        $tag->user_id = $user->id;
+        $tag->save();
         Sanctum::actingAs($user);
 
         $this->postJson('/api/styles', ['name' => 'Art Déco', 'tags' => [$tag->slug]])
@@ -61,14 +66,16 @@ class StyleApiTest extends TestCase
         $this->assertDatabaseCount('tags', 0);
     }
 
-    public function test_only_owner_can_update_or_delete_style(): void
+    public function test_other_users_styles_do_not_exist_for_the_current_user(): void
     {
         $style = Style::factory()->create();
         Sanctum::actingAs(User::factory()->create());
 
-        $this->putJson("/api/styles/{$style->slug}", ['name' => 'Hack'])->assertForbidden();
-        $this->deleteJson("/api/styles/{$style->slug}")->assertForbidden();
-        $this->getJson("/api/styles/{$style->slug}")->assertOk()->assertJsonPath('data.can.update', false);
+        $this->getJson("/api/styles/{$style->slug}")->assertNotFound();
+        $this->putJson("/api/styles/{$style->slug}", ['name' => 'Hack'])->assertNotFound();
+        $this->deleteJson("/api/styles/{$style->slug}")->assertNotFound();
+        $this->getJson('/api/styles')->assertJsonCount(0, 'data');
+        $this->assertModelExists($style);
     }
 
     public function test_owner_can_update_and_delete_style(): void
@@ -143,18 +150,20 @@ class StyleApiTest extends TestCase
 
     public function test_style_detail_lists_related_styles_by_shared_tags(): void
     {
-        $design = Tag::create(['name' => 'Design']);
-        $arte = Tag::create(['name' => 'Arte']);
-        $cor = Tag::create(['name' => 'Cor']);
-        $main = Style::factory()->create(['name' => 'Principal']);
+        $user = User::factory()->create();
+        $design = $this->tagFor($user, 'Design');
+        $arte = $this->tagFor($user, 'Arte');
+        $cor = $this->tagFor($user, 'Cor');
+        $make = fn (string $name) => Style::factory()->for($user, 'owner')->create(['name' => $name]);
+        $main = $make('Principal');
         $main->tags()->attach([$design->id, $arte->id]);
-        $both = Style::factory()->create(['name' => 'Dois em comum']);
+        $both = $make('Dois em comum');
         $both->tags()->attach([$design->id, $arte->id]);
-        $one = Style::factory()->create(['name' => 'Um em comum']);
+        $one = $make('Um em comum');
         $one->tags()->attach([$design->id]);
-        $none = Style::factory()->create(['name' => 'Sem relação']);
+        $none = $make('Sem relação');
         $none->tags()->attach([$cor->id]);
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($user);
 
         $response = $this->getJson("/api/styles/{$main->slug}")->assertOk();
 
@@ -163,9 +172,10 @@ class StyleApiTest extends TestCase
 
     public function test_style_without_tags_has_no_related_styles(): void
     {
-        $style = Style::factory()->create();
-        Style::factory()->create();
-        Sanctum::actingAs(User::factory()->create());
+        $user = User::factory()->create();
+        $style = Style::factory()->for($user, 'owner')->create();
+        Style::factory()->for($user, 'owner')->create();
+        Sanctum::actingAs($user);
 
         $this->getJson("/api/styles/{$style->slug}")->assertJsonCount(0, 'data.related');
     }
@@ -173,14 +183,14 @@ class StyleApiTest extends TestCase
     public function test_style_detail_returns_limited_previews_with_total_counts(): void
     {
         $owner = User::factory()->create();
-        $style = Style::factory()->create();
+        $style = Style::factory()->for($owner, 'owner')->create();
         foreach (range(1, 10) as $number) {
             $style->references()->attach($owner->referenceItems()->create(['title' => "Ref {$number}", 'image_url' => 'https://example.com/a.jpg']));
         }
-        foreach (Person::factory()->count(8)->create() as $person) {
+        foreach (Person::factory()->for($owner, 'owner')->count(8)->create() as $person) {
             $person->styles()->attach($style);
         }
-        foreach (Strategy::factory()->count(7)->create() as $strategy) {
+        foreach (Strategy::factory()->for($owner, 'owner')->count(7)->create() as $strategy) {
             $strategy->styles()->attach($style);
         }
         Sanctum::actingAs($owner);
@@ -197,14 +207,15 @@ class StyleApiTest extends TestCase
 
     public function test_people_and_strategies_can_be_filtered_by_style(): void
     {
-        $style = Style::factory()->create();
-        $inside = Person::factory()->create();
+        $user = User::factory()->create();
+        $style = Style::factory()->for($user, 'owner')->create();
+        $inside = Person::factory()->for($user, 'owner')->create();
         $inside->styles()->attach($style);
-        Person::factory()->create();
-        $strategy = Strategy::factory()->create();
+        Person::factory()->for($user, 'owner')->create();
+        $strategy = Strategy::factory()->for($user, 'owner')->create();
         $strategy->styles()->attach($style);
-        Strategy::factory()->create();
-        Sanctum::actingAs(User::factory()->create());
+        Strategy::factory()->for($user, 'owner')->create();
+        Sanctum::actingAs($user);
 
         $this->getJson("/api/people?style={$style->slug}")->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.slug', $inside->slug);
         $this->getJson("/api/strategies?style={$style->slug}")->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.slug', $strategy->slug);

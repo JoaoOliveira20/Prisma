@@ -16,7 +16,7 @@ const validKinds = ["reference", "style", "person", "strategy"];
 const text = (value: string | string[] | undefined) => (typeof value === "string" && value !== "" ? value : undefined);
 
 export default async function ReferencesPage({ searchParams }: PageProps<"/referencias">) {
-  const { page, q, kind, style, tag, person, strategy, group, sort, mine, nova } = await searchParams;
+  const { page, q, kind, style, tag, person, strategy, group, sort, nova } = await searchParams;
   const query = text(q);
   const kindFilter = validKinds.find((item) => item === text(kind));
   const styleFilter = text(style);
@@ -25,7 +25,6 @@ export default async function ReferencesPage({ searchParams }: PageProps<"/refer
   const strategyFilter = text(strategy);
   const groupFilter = Number(text(group)) || undefined;
   const sortFilter = text(sort) === "oldest" ? "oldest" : undefined;
-  const onlyMine = mine === "1";
   const pageNumber = Number(page) || undefined;
 
   const [{ data, meta }, groups, styles, people, strategies, tags, contextPerson, contextStrategy] = await Promise.all([
@@ -38,7 +37,6 @@ export default async function ReferencesPage({ searchParams }: PageProps<"/refer
       strategy: strategyFilter,
       group: groupFilter,
       sort: sortFilter,
-      mine: onlyMine,
       page: pageNumber,
     }),
     getGroups(),
@@ -59,7 +57,6 @@ export default async function ReferencesPage({ searchParams }: PageProps<"/refer
     strategy: strategyFilter,
     group: groupFilter ? String(groupFilter) : undefined,
     sort: sortFilter,
-    mine: onlyMine ? "1" : undefined,
   };
   redirectIfBeyondLastPage(meta, "/referencias", params);
 

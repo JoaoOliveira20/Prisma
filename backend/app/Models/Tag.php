@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasUniqueSlug;
+use App\Models\Concerns\OwnedByUser;
 use App\Models\Concerns\Searchable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 #[Fillable(['name'])]
 class Tag extends Model
 {
-    use HasUniqueSlug, Searchable;
+    use HasUniqueSlug, OwnedByUser, Searchable;
 
     public function styles(): BelongsToMany
     {

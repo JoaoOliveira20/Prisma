@@ -11,9 +11,10 @@
 | `people` | `user_id`, `name`, `slug`, `role`, `summary`, `biography`, `period`, `origin`, `photo_url`, `image_path` |
 | `strategies` | `user_id`, `name`, `slug`, `category`, `summary`, `description`, `cover_url`, `image_path` |
 | `reference_items` | `user_id`, `title`, `description`, `image_url` (nulável), `image_path`, `source_url`, `credit` |
-| `tags` | `user_id` (nulo = tag do sistema), `name`, `slug` (únicos) |
+| `tags` | `user_id` (dono), `name`, `slug`, únicos **por conta** (`user_id`+`name`, `user_id`+`slug`) |
 | `style_tag`, `person_tag`, `strategy_tag` | Tags de cada tipo (pivôs com chave composta) |
 | `person_style`, `strategy_style` | Pessoas e estratégias ↔ estilos |
+| `styles`, `people`, `strategies` | `slug` único por conta (`user_id`+`slug`), não global (migration `2026_10_09_100000`) |
 | `reference_item_tag` | Tags próprias das imagens ([ADR-015](../adr/ADR-015-reference-tags-and-explicit-links.md)); migration aditiva |
 | `referenceables` | Referência ↔ estilo/pessoa/estratégia (polimórfica) |
 | `groups`, `group_items` | Grupos por usuário; itens polimórficos |
@@ -39,7 +40,7 @@
 
 ## Tags controladas
 
-O `TagSeeder` cria 12 tags do sistema (sem dono). Usuários criam e gerenciam as suas pela tela de tags ([ADR-010](../adr/ADR-010-owned-controlled-tags.md)); estilos, pessoas e estratégias só aceitam slugs de tags existentes. A unicidade de `name` no MySQL ignora maiúsculas e acentos.
+Cada conta cria e gerencia as próprias tags pela tela de tags ([ADR-010](../adr/ADR-010-owned-controlled-tags.md), [ADR-018](../adr/ADR-018-private-workspace-per-account.md)); o `TagSeeder` cria as 12 tags de demonstração **na conta demo**; estilos, pessoas e estratégias só aceitam slugs de tags existentes. A unicidade de `name` no MySQL ignora maiúsculas e acentos.
 
 ## Seeders
 

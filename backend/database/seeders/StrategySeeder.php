@@ -66,14 +66,14 @@ class StrategySeeder extends Seeder
             $styleNames = $data['styles'];
             unset($data['tags'], $data['styles']);
 
-            $strategy = Strategy::where('name', $data['name'])->first() ?? $owner->strategies()->create($data);
+            $strategy = Strategy::where('user_id', $owner->id)->where('name', $data['name'])->first() ?? $owner->strategies()->create($data);
 
             if ($strategy->image_path === null && ($path = $this->copySeedImage(Str::slug($strategy->name), 'images'))) {
                 $strategy->forceFill(['image_path' => $path])->save();
             }
 
-            $strategy->tags()->sync(Tag::whereIn('slug', $tagSlugs)->pluck('id'));
-            $strategy->styles()->sync(Style::whereIn('name', $styleNames)->pluck('id'));
+            $strategy->tags()->sync(Tag::where('user_id', $owner->id)->whereIn('slug', $tagSlugs)->pluck('id'));
+            $strategy->styles()->sync(Style::where('user_id', $owner->id)->whereIn('name', $styleNames)->pluck('id'));
         }
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\Groupable;
+use App\Models\Concerns\OwnedByUser;
 use App\Models\Concerns\Searchable;
 use Closure;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Storage;
 #[Fillable(['title', 'image_url', 'image_path', 'source_url', 'credit', 'description'])]
 class ReferenceItem extends Model
 {
-    use Groupable, Searchable;
+    use Groupable, OwnedByUser, Searchable;
 
     protected static function booted(): void
     {

@@ -74,7 +74,6 @@ type ImageFilters = {
   sort?: string;
   person?: string;
   strategy?: string;
-  mine?: boolean;
   page?: number;
   perPage?: number;
 };
@@ -89,7 +88,6 @@ export async function getImagesPage(filters: ImageFilters = {}) {
   if (filters.sort) params.set("sort", filters.sort);
   if (filters.person) params.set("person", filters.person);
   if (filters.strategy) params.set("strategy", filters.strategy);
-  if (filters.mine) params.set("mine", "1");
   if (filters.page) params.set("page", String(filters.page));
   if (filters.perPage) params.set("per_page", String(filters.perPage));
 

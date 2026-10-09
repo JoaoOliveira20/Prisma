@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Style;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -60,9 +59,9 @@ class AuthApiTest extends TestCase
     {
         $this->getJson('/api/styles')->assertUnauthorized()->assertJsonPath('message', 'Não autenticado.');
 
-        $style = Style::factory()->create();
-        Sanctum::actingAs(User::factory()->create());
-        $this->deleteJson("/api/styles/{$style->slug}")
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+        $this->deleteJson("/api/groups/{$user->favoritesGroup()->id}")
             ->assertForbidden()
             ->assertJsonPath('message', 'Você não tem permissão para esta ação.');
     }

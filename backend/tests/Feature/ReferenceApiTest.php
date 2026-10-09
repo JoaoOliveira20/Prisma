@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Person;
 use App\Models\ReferenceItem;
 use App\Models\Style;
-use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -36,7 +35,7 @@ class ReferenceApiTest extends TestCase
         $this->getJson("/api/styles/{$style->slug}")->assertJsonCount(1, 'data.references');
         $this->getJson("/api/people/{$person->slug}")->assertJsonCount(1, 'data.references');
         $this->getJson("/api/references?type=person&slug={$person->slug}")->assertJsonCount(1, 'data');
-        $this->getJson('/api/references?type=style&slug='.Style::factory()->create()->slug)->assertJsonCount(0, 'data');
+        $this->getJson('/api/references?type=style&slug='.Style::factory()->for($user, 'owner')->create()->slug)->assertJsonCount(0, 'data');
     }
 
     public function test_reference_can_be_uploaded_and_file_is_removed_on_delete(): void
@@ -79,7 +78,7 @@ class ReferenceApiTest extends TestCase
             'title' => 'Intruso',
             'image_url' => 'https://example.com/b.jpg',
             'links' => [['type' => 'style', 'slug' => $style->slug]],
-        ])->assertForbidden();
+        ])->assertNotFound();
         $this->assertDatabaseCount('reference_items', 0);
     }
 
@@ -91,7 +90,9 @@ class ReferenceApiTest extends TestCase
         ]);
         Sanctum::actingAs(User::factory()->create());
 
-        $this->deleteJson("/api/references/{$reference->id}")->assertForbidden();
+        $this->deleteJson("/api/references/{$reference->id}")->assertNotFound();
+        $this->getJson("/api/references/{$reference->id}")->assertNotFound();
+        $this->assertModelExists($reference);
     }
 
     public function test_owner_can_update_reference_and_replace_links(): void
@@ -116,15 +117,20 @@ class ReferenceApiTest extends TestCase
         $reference = User::factory()->create()->referenceItems()->create(['title' => 'X', 'image_url' => 'https://example.com/x.jpg']);
         Sanctum::actingAs(User::factory()->create());
 
-        $this->putJson("/api/references/{$reference->id}", ['title' => 'Hack'])->assertForbidden();
+        $this->putJson("/api/references/{$reference->id}", ['title' => 'Hack'])->assertNotFound();
     }
 
     public function test_reference_tags_are_validated_and_synced_on_create_and_update(): void
     {
         $user = User::factory()->create();
-        $arte = Tag::create(['name' => 'Arte']);
-        $cor = Tag::create(['name' => 'Cor']);
+        $arte = $this->tagFor($user, 'Arte');
+        $cor = $this->tagFor($user, 'Cor');
+        $foreign = $this->tagFor(User::factory()->create(), 'Alheia');
         Sanctum::actingAs($user);
+
+        $this->postJson('/api/references', ['title' => 'A', 'image_url' => 'https://example.com/a.jpg', 'tags' => [$foreign->slug]])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('tags.0');
 
         $this->postJson('/api/references', ['title' => 'A', 'image_url' => 'https://example.com/a.jpg', 'tags' => ['nao-existe']])
             ->assertUnprocessable()
@@ -143,9 +149,7 @@ class ReferenceApiTest extends TestCase
     public function test_tag_used_by_a_reference_cannot_be_deleted(): void
     {
         $user = User::factory()->create();
-        $tag = Tag::create(['name' => 'Cartaz']);
-        $tag->user_id = $user->id;
-        $tag->save();
+        $tag = $this->tagFor($user, 'Cartaz');
         $reference = $user->referenceItems()->create(['title' => 'R', 'image_url' => 'https://example.com/r.jpg']);
         $reference->tags()->attach($tag);
         Sanctum::actingAs($user);
@@ -180,8 +184,8 @@ class ReferenceApiTest extends TestCase
         $foreignStyle = Style::factory()->for($other, 'owner')->create();
         Sanctum::actingAs($user);
 
-        $this->postJson('/api/references/links', ['references' => [$mine->id, $theirs->id], 'type' => 'style', 'slug' => $ownStyle->slug])->assertForbidden();
-        $this->postJson('/api/references/links', ['references' => [$mine->id], 'type' => 'style', 'slug' => $foreignStyle->slug])->assertForbidden();
+        $this->postJson('/api/references/links', ['references' => [$mine->id, $theirs->id], 'type' => 'style', 'slug' => $ownStyle->slug])->assertNotFound();
+        $this->postJson('/api/references/links', ['references' => [$mine->id], 'type' => 'style', 'slug' => $foreignStyle->slug])->assertNotFound();
         $this->postJson('/api/references/links', ['references' => [$mine->id, 9999], 'type' => 'style', 'slug' => $ownStyle->slug])->assertNotFound();
         $this->postJson('/api/references/links', ['references' => [], 'type' => 'style', 'slug' => $ownStyle->slug])->assertUnprocessable();
         $this->postJson('/api/references/links', ['references' => [$mine->id], 'type' => 'reference', 'slug' => 'x'])->assertUnprocessable();
@@ -191,8 +195,8 @@ class ReferenceApiTest extends TestCase
     public function test_reference_detail_lists_related_references_by_shared_links_and_tags(): void
     {
         $user = User::factory()->create();
-        $style = Style::factory()->create();
-        $tag = Tag::create(['name' => 'Cartaz']);
+        $style = Style::factory()->for($user, 'owner')->create();
+        $tag = $this->tagFor($user, 'Cartaz');
         $make = fn (string $title) => $user->referenceItems()->create(['title' => $title, 'image_url' => 'https://example.com/x.jpg']);
         $main = $make('Principal');
         $both = $make('Estilo e tag');

@@ -77,14 +77,14 @@ class StyleSeeder extends Seeder
             $tagSlugs = $data['tags'];
             unset($data['tags']);
 
-            $style = Style::where('name', $data['name'])->first()
+            $style = Style::where('user_id', $owner->id)->where('name', $data['name'])->first()
                 ?? $owner->styles()->create($data);
 
             if ($style->image_path === null && ($path = $this->copySeedImage(Str::slug($style->name), 'images'))) {
                 $style->forceFill(['image_path' => $path])->save();
             }
 
-            $style->tags()->sync(Tag::whereIn('slug', $tagSlugs)->pluck('id'));
+            $style->tags()->sync(Tag::where('user_id', $owner->id)->whereIn('slug', $tagSlugs)->pluck('id'));
         }
     }
 }
