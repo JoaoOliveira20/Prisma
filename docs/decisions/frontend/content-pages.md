@@ -31,7 +31,7 @@ Descoberta de **todo** o acervo (diferente de Estilos, que lista só estilos): t
 | Pessoas | Retratos 4:5 (2/3/4 colunas), com deslocamento alternado em telas largas |
 | Estratégias | **Lista tipográfica** numerada: número, categoria, nome grande, resumo, tags, miniatura 4:3 e seta |
 
-Cabeçalho (eyebrow "Dimensão · …", título, lede, botão de criar), faixa de ferramentas (busca com borda inferior, ordenação, "Buscar" e índice de tags como texto; o ativo é sublinhado), contagem ("5 registros") e paginação textual. Filtros e busca são **links/GET**, funcionam sem JavaScript e preservam a URL. A busca casa nome, resumo e também período e origem (estilos), atuação (pessoas) ou categoria (estratégias). Página inexistente volta para a última. Tiles de listagem usam `h2`; dentro de seções, `h3`.
+Cabeçalho (eyebrow "Dimensão · …", título, lede, botão de criar), faixa de ferramentas (`ContentSearch`: campo de busca em caixa com "×", ordenação, tags como botões alternáveis e "Limpar tudo" quando há critério), contagem ("5 registros", anunciada por `aria-live`) e paginação textual. A **busca é automática** (debounce de 250 ms, sem botão "Buscar"; Enter aplica na hora, Esc limpa o texto) e os filtros se aplicam ao clicar; o estado fica na **URL** (`useUrlFilters`), então continua compartilhável e funciona com "voltar". Sem resultado, aparece "Limpar busca e filtros" ([ADR-021](../adr/ADR-021-live-search-and-filters.md)). A faixa de contexto "Filtrando por estilo" é preservada ao buscar e ao limpar. A busca casa nome, resumo e também período e origem (estilos), atuação (pessoas) ou categoria (estratégias). Página inexistente volta para a última. Tiles de listagem usam `h2`; dentro de seções, `h3`.
 
 Estados: vazio (frase em serifa + ação), vazio com filtro ("Nada encontrado com esses filtros."), carregando (esqueleto), erro e não encontrado (títulos grandes com ação).
 
@@ -68,4 +68,4 @@ Imagem sem moldura (ou **placa tipográfica**), legenda estilo museu (eyebrow co
 
 ## Arquivos
 
-`app/(app)/{page,explorar,estilos,pessoas,estrategias}/**`, `components/content/*` (`ImageTile`, `ContentGrid`, `StrategyList`, `CoverImage`, `ContentBrowser`, `ContentFilters`, `ListSearch`, `DetailActions`, `Paragraphs`, `NumberedList`), `components/references/EntityReferences.tsx`, `components/layout/{PageHeader,Section,DimensionSection,DetailHeader,SectionNav,FilterContext}.tsx`, `lib/content.ts`, `lib/data.ts`.
+`app/(app)/{page,explorar,estilos,pessoas,estrategias}/**`, `components/content/*` (`ImageTile`, `ContentGrid`, `StrategyList`, `CoverImage`, `ContentBrowser`, `ContentSearch`, `TagFilter`, `DetailActions`, `Paragraphs`, `NumberedList`), `components/references/EntityReferences.tsx`, `components/layout/{PageHeader,Section,DimensionSection,DetailHeader,SectionNav,FilterContext}.tsx`, `lib/content.ts`, `lib/data.ts`.

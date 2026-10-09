@@ -8,6 +8,7 @@ const routes = [
   "/estilos",
   "/estilos/bauhaus",
   "/pessoas",
+  "/pessoas?q=rams&tag=design",
   "/pessoas/walter-gropius",
   "/estrategias",
   "/estrategias/sistemas-de-grade",

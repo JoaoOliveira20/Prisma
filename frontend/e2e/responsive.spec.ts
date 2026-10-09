@@ -33,6 +33,42 @@ test("menu mobile prende o foco no menu, bloqueia o conteúdo e devolve o foco a
   expect(await page.evaluate(() => document.documentElement.style.overflow)).toBe("");
 });
 
+test("busca e filtros das listas no celular: alvos grandes, sem overflow e ações distintas das tags", async ({ page }) => {
+  await loginAsDemo(page);
+  await page.goto("/pessoas");
+  await page.getByRole("searchbox", { name: "Buscar em pessoas" }).fill("rams");
+  await expect(page).toHaveURL(/q=rams/);
+  const tags = page.getByRole("group", { name: "Filtrar por tag" });
+  await tags.getByRole("button", { name: "Design", exact: true }).click();
+  await expect(page).toHaveURL(/tag=design/);
+
+  const clear = page.getByRole("button", { name: "Limpar tudo" });
+  await expect(clear).toBeVisible();
+  expect((await clear.boundingBox())!.height).toBeGreaterThanOrEqual(36);
+  expect((await tags.getByRole("button", { name: "Design", pressed: true }).boundingBox())!.height).toBeGreaterThanOrEqual(40);
+  expect((await page.getByRole("button", { name: "Limpar busca", exact: true }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await expect(tags.getByRole("button", { name: "Limpar tudo" })).toHaveCount(0);
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+});
+
+test("paleta no celular cabe na tela, tem botão Fechar e não gera rolagem horizontal", async ({ page }) => {
+  await loginAsDemo(page);
+  await page.getByRole("button", { name: "Buscar em tudo" }).click();
+  const dialog = page.getByRole("dialog", { name: "Pesquisa global" });
+  await dialog.getByRole("combobox").fill("bau");
+  await expect(dialog.getByRole("option").first()).toBeVisible();
+  const box = (await dialog.boundingBox())!;
+  expect(box.x).toBeGreaterThanOrEqual(8);
+  expect(box.x + box.width).toBeLessThanOrEqual(390 - 8);
+  expect(box.y + box.height).toBeLessThanOrEqual(844);
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+  expect((await dialog.getByRole("option").first().boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await dialog.getByRole("button", { name: "Fechar" }).click();
+  await expect(dialog).toBeHidden();
+});
+
 test("sem rolagem horizontal nas telas principais", async ({ page }) => {
   await loginAsDemo(page);
   for (const path of ["/", "/explorar", "/estilos", "/pessoas", "/estrategias", "/referencias", "/grupos", "/favoritos", "/tags", "/estilos/bauhaus", "/pessoas/walter-gropius", "/estrategias/sistemas-de-grade", "/estilos/novo", "/estilos/bauhaus/editar"]) {

@@ -1,4 +1,5 @@
 import { FilterContext } from "@/components/layout/FilterContext";
+import Link from "next/link";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { LinkButton } from "@/components/ui/Button";
 import { Pagination } from "@/components/ui/Pagination";
@@ -6,9 +7,8 @@ import { contentPaths, personToCard, strategyToCard, styleToCard } from "@/lib/c
 import { getPeoplePage, getStrategiesPage, getStyle, getStylesPage, getTags } from "@/lib/data";
 import { redirectIfBeyondLastPage } from "@/lib/pagination";
 import type { ContentType } from "@/types/api";
-import { ContentFilters } from "./ContentFilters";
+import { ContentSearch } from "./ContentSearch";
 import { ContentGrid, type GridLayout } from "./ContentGrid";
-import { ListSearch } from "./ListSearch";
 import { StrategyList } from "./StrategyList";
 
 const labels: Record<ContentType, { eyebrow: string; title: string; lede: string; create: string; empty: string; first: string; search: string; layout: GridLayout | "list" }> = {
@@ -77,18 +77,20 @@ export async function ContentBrowser({ type, searchParams }: ContentBrowserProps
   const isFiltered = Boolean(tag || q || style);
   const label = labels[type];
   const emptyMessage = isFiltered ? "Nada encontrado com esses filtros." : label.empty;
-  const emptyAction = !isFiltered && <LinkButton href={`${path}/novo`}>{label.first}</LinkButton>;
+  const clearHref = style ? `${path}?style=${style}` : path;
+  const emptyAction = isFiltered ? (
+    <Link href={clearHref} className="underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-text text-sm text-text-muted hover:text-text">Limpar busca e filtros</Link>
+  ) : (
+    <LinkButton href={`${path}/novo`}>{label.first}</LinkButton>
+  );
 
   return (
     <>
       <PageHeader eyebrow={label.eyebrow} title={label.title} lede={label.lede} actions={<LinkButton href={`${path}/novo`} variant="secondary">{label.create}</LinkButton>} />
       {contextStyle && <FilterContext kind="estilo" name={contextStyle.name} openHref={`${contentPaths.style}/${contextStyle.slug}`} clearHref={path} />}
-      <div className="page-x space-y-5 border-y border-border py-5">
-        <ListSearch basePath={path} query={q} tag={tag} style={style} sort={sort} placeholder={label.search} />
-        <ContentFilters basePath={path} tags={tags} activeTag={tag} query={q} style={style} sort={sort} />
-      </div>
+      <ContentSearch label={`Buscar em ${label.title.toLowerCase()}`} placeholder={label.search} tags={tags} withSort>
       <div key={JSON.stringify(sortParams) + meta.current_page} className="page-x results-in pt-12">
-        <p className="eyebrow tabular mb-8">{meta.total} {meta.total === 1 ? "registro" : "registros"}</p>
+        <p aria-live="polite" className="eyebrow tabular mb-8">{meta.total} {meta.total === 1 ? "registro" : "registros"}</p>
         {label.layout === "list" ? (
           <StrategyList items={items} emptyMessage={emptyMessage} emptyAction={emptyAction} />
         ) : (
@@ -96,6 +98,7 @@ export async function ContentBrowser({ type, searchParams }: ContentBrowserProps
         )}
         <Pagination meta={meta} basePath={path} params={sortParams} />
       </div>
+      </ContentSearch>
     </>
   );
 }

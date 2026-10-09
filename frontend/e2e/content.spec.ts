@@ -132,19 +132,80 @@ test("pessoa e estratégia vinculadas a estilo próprio aparecem nas abas do est
 test("busca na listagem e filtro por tag", async ({ page }) => {
   await loginAsDemo(page);
   await page.goto("/explorar");
-  await page.getByRole("searchbox", { name: "Buscar" }).fill("1919");
-  await page.getByRole("button", { name: "Buscar", exact: true }).click();
+  await page.getByRole("searchbox", { name: "Buscar em todo o acervo" }).fill("1919");
   await expect(page).toHaveURL(/q=1919/);
   await expect(page.getByRole("heading", { name: "Bauhaus" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Minimalismo" })).toHaveCount(0);
 
   await page.goto("/explorar");
-  await page.getByRole("navigation", { name: "Filtrar por tag" }).getByRole("link", { name: "Urbano" }).click();
+  await page.getByRole("group", { name: "Filtrar por tag" }).getByRole("button", { name: "Urbano" }).click();
   await expect(page.getByRole("heading", { name: "Brutalismo" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Bauhaus" })).toHaveCount(0);
 
   await page.goto("/explorar?q=nada-existe-aqui");
   await expect(page.getByText("Nada encontrado com esses filtros.")).toBeVisible();
+});
+
+test("busca das listas atualiza sozinha, combina com tags e limpa sem apagar o filtro", async ({ page }) => {
+  await loginAsDemo(page);
+  await page.goto("/pessoas");
+  await expect(page.getByRole("button", { name: "Buscar", exact: true })).toHaveCount(0);
+  const search = page.getByRole("searchbox", { name: "Buscar em pessoas" });
+  const tags = page.getByRole("group", { name: "Filtrar por tag" });
+
+  await search.pressSequentially("dieter rams");
+  await expect(search).toHaveValue("dieter rams");
+  await expect(page).toHaveURL(/q=dieter(\+|%20)rams/);
+  await expect(page.getByRole("heading", { level: 2, name: "Dieter Rams" })).toBeVisible();
+  await expect(page.getByText("1 registro", { exact: true })).toBeVisible();
+
+  await search.fill("rams");
+  await expect(page).toHaveURL(/q=rams$/);
+  await tags.getByRole("button", { name: "Design", exact: true }).click();
+  await expect(page).toHaveURL(/tag=design/);
+  await expect(tags.getByRole("button", { name: "Design", pressed: true })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Dieter Rams" })).toBeVisible();
+
+  await search.fill("zzzzz");
+  await expect(page.getByText("Nada encontrado com esses filtros.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Limpar busca e filtros" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Limpar busca", exact: true }).click();
+  await expect(search).toHaveValue("");
+  await expect(page).not.toHaveURL(/q=/);
+  await expect(page).toHaveURL(/tag=design/);
+  await expect(page.getByRole("heading", { level: 2, name: "Dieter Rams" })).toBeVisible();
+
+  await search.fill("rams");
+  await expect(page).toHaveURL(/q=rams/);
+  await page.getByRole("button", { name: "Limpar tudo" }).click();
+  await expect(search).toHaveValue("");
+  await expect(page).not.toHaveURL(/q=|tag=/);
+  await expect(page.getByRole("button", { name: "Limpar tudo" })).toHaveCount(0);
+
+  await tags.getByRole("button", { name: "Design", exact: true }).click();
+  await expect(page).toHaveURL(/tag=design/);
+  await tags.getByRole("button", { name: "Design", pressed: true }).click();
+  await expect(page).not.toHaveURL(/tag=/);
+});
+
+test("a busca das listas não perde caracteres ao digitar rápido e preserva o contexto de estilo", async ({ page }) => {
+  await loginAsDemo(page);
+  await page.goto("/estilos");
+  const search = page.getByRole("searchbox", { name: "Buscar em estilos" });
+  await search.pressSequentially("minimalismo", { delay: 15 });
+  await expect(search).toHaveValue("minimalismo");
+  await expect(page.getByRole("heading", { level: 2, name: "Minimalismo" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Bauhaus" })).toHaveCount(0);
+
+  await page.goto("/pessoas?style=bauhaus");
+  await page.getByRole("searchbox", { name: "Buscar em pessoas" }).fill("gropius");
+  await expect(page).toHaveURL(/style=bauhaus/);
+  await expect(page).toHaveURL(/q=gropius/);
+  await expect(page.getByText("Filtrando por estilo")).toBeVisible();
+  await page.getByRole("button", { name: "Limpar tudo" }).click();
+  await expect(page).toHaveURL(/style=bauhaus/);
+  await expect(page).not.toHaveURL(/q=/);
 });
 
 test("erro de validação do servidor preserva o que foi digitado", async ({ page }) => {

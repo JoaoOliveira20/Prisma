@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ListSearch } from "@/components/content/ListSearch";
+import { ContentSearch } from "@/components/content/ContentSearch";
 import { Pagination } from "@/components/ui/Pagination";
 import { contentPaths } from "@/lib/content";
 import { getGroups, getImagesPage } from "@/lib/data";
@@ -49,14 +49,13 @@ export async function EntityReferences({ type, slug, name, canUpdate, searchPara
           {canUpdate && <AddReferenceButton type={type} slug={slug} />}
         </div>
       </header>
-      <div className="page-x border-y border-border py-5">
-        <ListSearch basePath={basePath} query={query} placeholder="Buscar por título, descrição ou crédito" withSort={false} />
-      </div>
+      <ContentSearch label="Buscar nas referências" placeholder="Buscar por título, descrição ou crédito">
       <div key={`${query}-${meta.current_page}`} className="page-x results-in pt-12">
         <p className="eyebrow tabular mb-8">{meta.total} {meta.total === 1 ? "referência" : "referências"}</p>
         <ReferenceGallery selectable items={data} groups={groups} emptyMessage={query ? "Nenhuma referência encontrada." : "Nenhuma referência adicionada ainda."} />
         <Pagination meta={meta} basePath={basePath} params={{ q: query }} />
       </div>
+      </ContentSearch>
     </>
   );
 }

@@ -20,8 +20,9 @@ test("explorar filtra por busca e por tag", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 2, name: /^Pessoas\s*1$/ })).toBeVisible();
 
   await page.goto("/explorar");
-  await page.getByRole("navigation", { name: "Filtrar por tag" }).getByRole("link", { name: "Urbano" }).click();
+  await page.getByRole("group", { name: "Filtrar por tag" }).getByRole("button", { name: "Urbano" }).click();
   await expect(page).toHaveURL(/tag=urbano/);
+  await expect(page.getByRole("button", { name: "Urbano", pressed: true })).toBeVisible();
   await expect(page.getByRole("heading", { level: 2, name: /^Estilos\s*1$/ })).toBeVisible();
   await expect(page.getByRole("heading", { level: 2, name: /^Imagens/ })).toHaveCount(0);
 

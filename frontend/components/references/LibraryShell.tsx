@@ -1,8 +1,8 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
-import { NavIcon } from "@/components/layout/NavIcon";
+import { useState, type ReactNode } from "react";
+import { controlClass, SearchField } from "@/components/ui/SearchField";
+import { useUrlFilters } from "@/lib/useUrlFilters";
 import type { LinkOption } from "@/types/api";
 
 type FilterKey = "style" | "person" | "strategy" | "tag" | "group";
@@ -31,43 +31,8 @@ const kinds = [
 const filterKeys = Object.keys(filterLabels) as FilterKey[];
 
 export function LibraryShell({ options, children }: LibraryShellProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const params = useSearchParams();
-  const [pending, startTransition] = useTransition();
-  const urlQuery = params.get("q") ?? "";
-  const [query, setQuery] = useState(urlQuery);
+  const { params, query, setQuery, apply, pending, commitQuery, clearQuery, clearAll: clearEverything } = useUrlFilters();
   const [panelOpen, setPanelOpen] = useState(false);
-  const appliedQuery = useRef(urlQuery);
-
-  const apply = (changes: Record<string, string | undefined>) => {
-    const next = new URLSearchParams(params.toString());
-    next.delete("page");
-    next.delete("nova");
-    for (const [key, value] of Object.entries(changes)) {
-      if (value) next.set(key, value);
-      else next.delete(key);
-    }
-    const search = next.toString();
-    startTransition(() => router.replace(search ? `${pathname}?${search}` : pathname, { scroll: false }));
-  };
-
-  useEffect(() => {
-    if (urlQuery !== appliedQuery.current) {
-      appliedQuery.current = urlQuery;
-      setQuery(urlQuery);
-    }
-  }, [urlQuery]);
-
-  useEffect(() => {
-    if (query === appliedQuery.current) return;
-    const timer = setTimeout(() => {
-      appliedQuery.current = query;
-      apply({ q: query || undefined });
-    }, 350);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query]);
 
   const activeFilters = filterKeys.flatMap((key) => {
     const value = params.get(key);
@@ -77,11 +42,7 @@ export function LibraryShell({ options, children }: LibraryShellProps) {
   const kind = params.get("kind") ?? "";
   const contextual = Boolean(params.get("person") || params.get("strategy"));
   const activeCount = activeFilters.length;
-  const clearAll = () => {
-    appliedQuery.current = "";
-    setQuery("");
-    apply({ q: undefined, kind: undefined, ...Object.fromEntries(filterKeys.map((key) => [key, undefined])) });
-  };
+  const clearAll = () => clearEverything(["kind", ...filterKeys]);
   const hasAnything = Boolean(query || kind || activeCount);
 
   const selectClass = "h-11 w-full cursor-pointer border-b border-border-strong bg-transparent pr-2 text-sm focus:border-text";
@@ -90,29 +51,16 @@ export function LibraryShell({ options, children }: LibraryShellProps) {
     <>
       <div role="search" className="page-x border-y border-border py-4">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-          <div className="relative order-1 min-w-0 basis-full sm:basis-auto sm:flex-1 sm:max-w-xl">
-            <span className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 text-text-muted"><NavIcon name="search" /></span>
-            <label className="sr-only" htmlFor="library-search">Buscar na biblioteca</label>
-            <input
-              id="library-search"
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  appliedQuery.current = query;
-                  apply({ q: query || undefined });
-                }
-              }}
-              placeholder="Título, tag, estilo, pessoa, fonte…"
-              className="h-11 w-full border-b border-border-strong bg-transparent pl-7 pr-8 font-serif text-lg placeholder:text-text-muted focus:border-text [&::-webkit-search-cancel-button]:hidden"
-            />
-            {query && (
-              <button type="button" onClick={() => setQuery("")} aria-label="Limpar busca" className="absolute right-0 top-1/2 grid size-8 -translate-y-1/2 place-items-center text-text-muted hover:text-text">
-                ×
-              </button>
-            )}
-          </div>
+          <SearchField
+            id="library-search"
+            label="Buscar na biblioteca"
+            placeholder="Título, tag, estilo, pessoa, fonte…"
+            value={query}
+            onChange={setQuery}
+            onSubmit={commitQuery}
+            onClear={clearQuery}
+            className="order-1 basis-full sm:flex-1 sm:basis-auto sm:max-w-xl"
+          />
 
           <button
             type="button"
@@ -132,7 +80,7 @@ export function LibraryShell({ options, children }: LibraryShellProps) {
               id="library-sort"
               value={params.get("sort") ?? "recent"}
               onChange={(event) => apply({ sort: event.target.value === "recent" ? undefined : event.target.value })}
-              className="h-11 cursor-pointer border-b border-border-strong bg-transparent pr-2 focus:border-text"
+              className={`${controlClass} cursor-pointer pr-2`}
             >
               <option value="recent">Mais recentes</option>
               <option value="oldest">Mais antigas</option>
@@ -199,7 +147,7 @@ export function LibraryShell({ options, children }: LibraryShellProps) {
             ))}
             {hasAnything && (
               <li>
-                <button type="button" onClick={clearAll} className="nav-link ml-2 text-sm text-text-muted hover:text-text">
+                <button type="button" onClick={clearAll} className="underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-text ml-2 py-2 text-sm text-text-muted hover:text-text">
                   Limpar tudo
                 </button>
               </li>

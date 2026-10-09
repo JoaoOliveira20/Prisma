@@ -28,6 +28,7 @@ Um ADR registra uma decisão de **arquitetura, segurança, infraestrutura ou per
 | [018](ADR-018-private-workspace-per-account.md) | Cada conta é um acervo privado | Aceita (substitui o 007) |
 | [019](ADR-019-one-table-per-migration.md) | Uma migration por tabela e histórico imutável | Aceita |
 | [020](ADR-020-sliding-session.md) | Sessão de 1 dia renovada pelo uso | Aceita (altera o 001) |
+| [021](ADR-021-live-search-and-filters.md) | Busca e filtros das páginas de conteúdo reativos, com a URL como estado | Aceita |
 
 ## Modelo
 
