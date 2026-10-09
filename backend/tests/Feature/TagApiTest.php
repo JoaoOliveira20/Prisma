@@ -81,4 +81,17 @@ class TagApiTest extends TestCase
             ->assertJsonPath('message', 'Esta tag está em uso e não pode ser excluída.');
         $this->assertModelExists($tag);
     }
+
+    public function test_tags_are_removed_with_their_owner(): void
+    {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $this->tagFor($owner, 'Minha');
+        $kept = $this->tagFor($other, 'Dela');
+
+        $owner->delete();
+
+        $this->assertDatabaseMissing('tags', ['name' => 'Minha']);
+        $this->assertModelExists($kept);
+    }
 }
