@@ -15,7 +15,7 @@ Um ADR registra uma decisão de **arquitetura, segurança, infraestrutura ou per
 | [005](ADR-005-polymorphic-references.md) | Referências com relação polimórfica | Aceita (substitui o vínculo só com estilos) |
 | [006](ADR-006-kool-development-environment.md) | Kool como ambiente de desenvolvimento do backend | Aceita |
 | [007](ADR-007-content-ownership.md) | Leitura para autenticados, escrita só do dono | Substituída pelo 018 |
-| [008](ADR-008-pre-release-migrations.md) | Migrations editadas no lugar antes do primeiro release | Aceita (temporária) |
+| [008](ADR-008-pre-release-migrations.md) | Migrations editadas no lugar antes do primeiro release | Encerrada (substituída pelo 019) |
 | [009](ADR-009-handwritten-translations.md) | Traduções pt_BR da API mantidas à mão | Aceita |
 | [010](ADR-010-owned-controlled-tags.md) | Tags controladas com dono | Aceita |
 | [011](ADR-011-playwright-e2e.md) | Testes ponta a ponta do frontend com Playwright | Aceita |
@@ -26,6 +26,7 @@ Um ADR registra uma decisão de **arquitetura, segurança, infraestrutura ou per
 | [016](ADR-016-reference-library-as-visual-archive.md) | Biblioteca de referências como arquivo visual | Aceita |
 | [017](ADR-017-sidebar-as-archive-index.md) | Sidebar como índice do arquivo | Aceita |
 | [018](ADR-018-private-workspace-per-account.md) | Cada conta é um acervo privado | Aceita (substitui o 007) |
+| [019](ADR-019-one-table-per-migration.md) | Uma migration por tabela e histórico imutável | Aceita |
 
 ## Modelo
 

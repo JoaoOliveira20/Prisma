@@ -36,6 +36,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('tags', function (Blueprint $table) {
+            $table->index('user_id');
             $table->dropUnique(['user_id', 'name']);
             $table->dropUnique(['user_id', 'slug']);
             $table->unique('name');
@@ -44,6 +45,7 @@ return new class extends Migration
 
         foreach (self::SLUGGED as $table) {
             Schema::table($table, function (Blueprint $table_) {
+                $table_->index('user_id');
                 $table_->dropUnique(['user_id', 'slug']);
                 $table_->unique('slug');
             });

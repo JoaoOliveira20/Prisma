@@ -130,6 +130,8 @@ quando útil, arquivos afetados.
 
 -   2026-10-09: **cada conta é um acervo privado** (ADR-018): estilos, pessoas, estratégias, referências, tags e grupos só aparecem para o dono (global scope `OwnedByUser`, 404 para registro alheio, slugs e nomes únicos por conta, validações por conta, consultas de `/images` filtradas); seeders criam tudo na conta demo; conta nova começa vazia com estados orientadores; Explorar mostra tudo **da conta**; removido o filtro "só o que eu criei". Migration `scope_content_to_owner` (índices por conta; tags sem dono foram para a conta demo). 75 testes PHPUnit (`DataIsolationApiTest` novo) e E2E reescritos (demo onde precisa do acervo, contas novas onde não precisa).
 
+-   2026-10-09: **migrations reorganizadas** (ADR-019): uma por tabela (separadas `reference_items`/`referenceables`, `groups`/`group_items` e os quatro vínculos de conteúdo; `reference_item_tag` com nome de arquivo coerente), vínculos em ordem sequencial, `down()` da `scope_content_to_owner` corrigido para MySQL. Esquema comparado com o banco atual (idêntico, 23 tabelas), rollback e nova instalação testados em banco temporário, `migrations` do banco de desenvolvimento atualizada sem perder dados. Em seguida, migration nova `make_tags_user_required` (`tags.user_id` obrigatório com cascata), testada em `up`/`down` no MySQL e com teste de exclusão do usuário. 76 testes PHPUnit.
+
 ## Pendências conhecidas da primeira entrega
 
 -   Imagem de referência não pode ser trocada depois de criada; estilos/pessoas sem imagem não aparecem na biblioteca; capas e fotos não viram referência.

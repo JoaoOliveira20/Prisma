@@ -29,7 +29,7 @@ Frontend (em `frontend/`): `cp .env.example .env.local`, `yarn install`, `yarn d
 
 -   Testes do backend: `kool run phpunit` (SQLite em memória).
 -   Formatação do backend: `kool run composer exec pint`.
--   Recriar dados: `kool run artisan migrate:fresh --seed` (apaga o banco; política do [ADR-008](../adr/ADR-008-pre-release-migrations.md)).
+-   Recriar dados do zero: `kool run artisan migrate:fresh --seed` (**apaga o banco**; use só em ambiente local descartável).
 -   Verificações do frontend: `yarn lint`, `yarn tsc --noEmit`, `yarn build`.
 -   Logs: `kool logs`; parar: `kool stop`.
 

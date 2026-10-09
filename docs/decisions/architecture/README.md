@@ -35,4 +35,4 @@ Tipos de conteúdo: **estilos**, **pessoas**, **estratégias** e **referências 
 -   [ADR-001 Estratégia de autenticação](../adr/ADR-001-authentication-strategy.md)
 -   [ADR-003 Integração frontend ↔ backend](../adr/ADR-003-frontend-backend-integration.md)
 -   [ADR-005 Referências polimórficas](../adr/ADR-005-polymorphic-references.md)
--   [ADR-008 Migrations editadas no lugar antes do primeiro release](../adr/ADR-008-pre-release-migrations.md)
+-   [ADR-008 Migrations editadas no lugar antes do primeiro release](../adr/ADR-008-pre-release-migrations.md) (encerrada; ver [ADR-019](../adr/ADR-019-one-table-per-migration.md))

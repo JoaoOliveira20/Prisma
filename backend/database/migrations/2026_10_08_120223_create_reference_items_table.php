@@ -19,17 +19,10 @@ return new class extends Migration
             $table->string('description', 1000)->nullable();
             $table->timestamps();
         });
-
-        Schema::create('referenceables', function (Blueprint $table) {
-            $table->foreignId('reference_item_id')->constrained()->cascadeOnDelete();
-            $table->morphs('referenceable');
-            $table->primary(['reference_item_id', 'referenceable_type', 'referenceable_id']);
-        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('referenceables');
         Schema::dropIfExists('reference_items');
     }
 };

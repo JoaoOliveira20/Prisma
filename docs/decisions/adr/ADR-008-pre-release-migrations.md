@@ -1,7 +1,7 @@
 # ADR-008: Migrations editadas no lugar antes do primeiro release
 
 -   **Data:** 2026-10-08
--   **Status:** aceita (temporária)
+-   **Status:** encerrada em 2026-10-09 (já há contas com dados); a convenção vigente é o [ADR-019](ADR-019-one-table-per-migration.md)
 
 ## Contexto
 

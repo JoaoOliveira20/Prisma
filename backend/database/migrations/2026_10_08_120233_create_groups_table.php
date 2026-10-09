@@ -16,19 +16,10 @@ return new class extends Migration
             $table->timestamps();
             $table->unique(['user_id', 'name']);
         });
-
-        Schema::create('group_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('group_id')->constrained()->cascadeOnDelete();
-            $table->morphs('groupable');
-            $table->timestamps();
-            $table->unique(['group_id', 'groupable_type', 'groupable_id']);
-        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('group_items');
         Schema::dropIfExists('groups');
     }
 };

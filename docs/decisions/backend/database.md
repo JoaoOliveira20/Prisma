@@ -11,7 +11,7 @@
 | `people` | `user_id`, `name`, `slug`, `role`, `summary`, `biography`, `period`, `origin`, `photo_url`, `image_path` |
 | `strategies` | `user_id`, `name`, `slug`, `category`, `summary`, `description`, `cover_url`, `image_path` |
 | `reference_items` | `user_id`, `title`, `description`, `image_url` (nulável), `image_path`, `source_url`, `credit` |
-| `tags` | `user_id` (dono), `name`, `slug`, únicos **por conta** (`user_id`+`name`, `user_id`+`slug`) |
+| `tags` | `user_id` (dono, obrigatório; apagar o usuário apaga as tags), `name`, `slug`, únicos **por conta** (`user_id`+`name`, `user_id`+`slug`) |
 | `style_tag`, `person_tag`, `strategy_tag` | Tags de cada tipo (pivôs com chave composta) |
 | `person_style`, `strategy_style` | Pessoas e estratégias ↔ estilos |
 | `styles`, `people`, `strategies` | `slug` único por conta (`user_id`+`slug`), não global (migration `2026_10_09_100000`) |
@@ -48,7 +48,7 @@ Cada conta cria e gerencia as próprias tags pela tela de tags ([ADR-010](../adr
 
 ## Migrations
 
-Política atual: migrations existentes são editadas e o banco recriado com `kool run artisan migrate:fresh --seed` ([ADR-008](../adr/ADR-008-pre-release-migrations.md)). Isso acaba quando houver dados a preservar.
+Convenção ([ADR-019](../adr/ADR-019-one-table-per-migration.md)): **uma migration por tabela criada** (os arquivos padrão do Laravel `users`, `cache` e `jobs` seguem como vieram) e **uma migration por alteração lógica** depois disso. Migrations já aplicadas **não se editam**: mudanças viram migration nova. Ordem de execução: tabelas principais (`styles`, `tags`, `reference_items`, `people`, `strategies`, `groups`), depois as tabelas de vínculo (`style_tag`, `person_tag`, `strategy_tag`, `person_style`, `strategy_style`, `reference_item_tag`, `referenceables`, `group_items`) e por fim as alterações (`scope_content_to_owner`).
 
 ## Limitações
 
